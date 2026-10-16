@@ -8,12 +8,9 @@ import {
   ArrowRight,
   CheckCircle2,
   GitCommit,
-  Terminal,
-  Cpu,
-  Lock,
-  Layers,
   Sparkles,
-  ChevronRight
+  Database,
+  BookOpen
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { StatusBadge } from '../components/StatusBadge';
@@ -21,206 +18,199 @@ import { StatusBadge } from '../components/StatusBadge';
 export const LandingPage: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'demonstrated' | 'unverified' | 'hidden'>('demonstrated');
-  const [videoLoaded, setVideoLoaded] = useState<boolean>(false);
 
   return (
-    <div className="min-h-screen bg-[#090D12] text-[#F4F5F2] selection:bg-[#D6FF63] selection:text-[#090D12] relative overflow-hidden">
-      {/* Background ambient radial glow matching owl's glowing eye */}
-      <div className="absolute top-0 right-1/4 w-[750px] h-[550px] bg-[#D6FF63]/5 blur-[160px] pointer-events-none rounded-full" />
-      <div className="absolute top-1/3 left-10 w-[500px] h-[450px] bg-[#A99BFF]/5 blur-[140px] pointer-events-none rounded-full" />
-      <div className="absolute bottom-1/4 right-10 w-[600px] h-[400px] bg-[#D6FF63]/4 blur-[150px] pointer-events-none rounded-full" />
+    <div className="min-h-screen text-slate-900 relative overflow-hidden">
+      {/* Ambient background glows */}
+      <div className="absolute top-0 right-1/4 w-[650px] h-[450px] bg-blue-400/10 blur-[140px] pointer-events-none rounded-full" />
+      <div className="absolute top-1/3 left-10 w-[500px] h-[400px] bg-indigo-400/10 blur-[130px] pointer-events-none rounded-full" />
+      <div className="absolute bottom-1/4 right-10 w-[550px] h-[350px] bg-sky-300/10 blur-[130px] pointer-events-none rounded-full" />
 
       {/* Hero Section */}
-      <section className="relative pt-6 sm:pt-10 pb-20 sm:pb-28 border-b border-[#29313B]/70">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+      <section className="relative pt-12 sm:pt-16 pb-20 sm:pb-28 border-b border-slate-200/70">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
             
-            {/* Left Area: Narrative & CTAs */}
-            <div className="lg:col-span-5 flex flex-col justify-center z-10">
+            {/* Left Area: Value Proposition */}
+            <div className="lg:col-span-6 flex flex-col justify-center z-10">
               {/* Eyebrow Pill */}
-              <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#171D25] border border-[#29313B] text-xs font-mono text-[#D6FF63] mb-6 w-fit shadow-[0_0_15px_rgba(214,255,99,0.12)]">
+              <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-xs font-semibold text-blue-700 mb-6 w-fit shadow-xs">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D6FF63] opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D6FF63]" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-600 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600" />
                 </span>
-                <span className="tracking-wide">AI EVIDENCE SENTINEL // PROOFPATH CORE</span>
+                <span>PROOFPATH ENTERPRISE AI SENTINEL</span>
               </div>
 
               {/* Headline */}
-              <h1 className="text-3xl sm:text-5xl xl:text-6xl font-headline font-bold text-[#F4F5F2] tracking-tight leading-[1.08] mb-6">
+              <h1 className="text-3xl sm:text-5xl xl:text-6xl font-headline font-bold text-slate-900 tracking-tight leading-[1.08] mb-6">
                 Your code tells a story.{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D6FF63] via-[#E8FFA1] to-[#A99BFF] drop-shadow-[0_0_30px_rgba(214,255,99,0.35)]">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600">
                   Make the evidence visible.
                 </span>
               </h1>
 
               {/* Subheading */}
-              <p className="text-base sm:text-lg text-[#A9B0BC] leading-relaxed mb-8 max-w-lg font-sans">
-                ProofPath performs rigorous multi-source triangulation between employer job requirements, your résumé claims, and verified GitHub repositories — extracting commit-pinned code citations with zero hallucinations.
+              <p className="text-base sm:text-lg text-slate-600 leading-relaxed mb-8 max-w-xl">
+                ProofPath performs rigorous multi-source verification across employer job requirements, your résumé claims, and verified GitHub repositories — extracting commit-pinned code citations with zero hallucinations.
               </p>
 
               {/* CTAs */}
               <div className="flex flex-wrap items-center gap-4 mb-10">
                 <Link
                   to={user ? "/wizard" : "/register"}
-                  className="inline-flex items-center gap-2.5 px-6 py-4 rounded-xl bg-[#D6FF63] text-[#090D12] font-headline font-bold text-sm hover:bg-[#c2ec4b] transition-all shadow-[0_0_25px_rgba(214,255,99,0.28)] hover:shadow-[0_0_35px_rgba(214,255,99,0.45)] hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-sm hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md shadow-blue-500/20 hover:shadow-lg hover:-translate-y-0.5"
                 >
-                  <span>{user ? "Launch Setup Wizard" : "Audit Your Evidence Now"}</span>
-                  <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                  <span>{user ? "Launch Setup Wizard" : "Start New Assessment"}</span>
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
 
                 <Link
                   to={user ? "/jobs/discover" : "/login"}
-                  className="inline-flex items-center gap-2 px-6 py-4 rounded-xl bg-[#171D25] text-[#F4F5F2] border border-[#29313B] font-headline font-medium text-sm hover:bg-[#222933] hover:border-[#D6FF63]/40 transition-all hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white/90 text-slate-800 border border-slate-200 font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all shadow-xs hover:-translate-y-0.5"
                 >
                   <span>{user ? "Explore Discovered Jobs" : "Sign In to Workspace"}</span>
                 </Link>
               </div>
 
-              {/* Integrity Checklist Chips */}
-              <div className="pt-6 border-t border-[#29313B]/60 flex flex-wrap gap-y-2 gap-x-6 text-xs text-[#A9B0BC] font-mono">
+              {/* Integrity Checklist */}
+              <div className="pt-6 border-t border-slate-200/80 flex flex-wrap gap-y-2 gap-x-6 text-xs text-slate-600 font-medium">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#D6FF63]" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   <span>Exact Commit SHA Line Numbers</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#D6FF63]" />
-                  <span>Anti-Hallucination Verifier</span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>Deterministic Citation Verifier</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#D6FF63]" />
-                  <span>Safe Static Read-Only AST</span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>PostgreSQL & Supabase Hosted</span>
                 </div>
               </div>
             </div>
 
-            {/* Right Area: Futuristic Owl Animation Centerpiece (Expanded) */}
-            <div className="lg:col-span-7 xl:col-span-7 relative flex items-center justify-center">
-              {/* Circular Illuminated Ring Glow complementing the owl platform */}
-              <div className="absolute inset-0 -m-6 sm:-m-12 rounded-full bg-gradient-to-tr from-[#D6FF63]/18 via-[#D6FF63]/5 to-[#A99BFF]/15 blur-[65px] pointer-events-none" />
-
-              {/* Outer HUD Showcase Container */}
-              <div className="relative w-full rounded-2xl sm:rounded-3xl border border-[#29313B] bg-[#090D12] overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.95),0_0_40px_rgba(214,255,99,0.12)] group">
-                
-                {/* Top HUD Telemetry Bar */}
-                <div className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-4 sm:px-6 py-3 bg-[#090D12]/75 backdrop-blur-md border-b border-[#29313B]/80 text-[11px] sm:text-xs font-mono">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#D6FF63] shadow-[0_0_10px_#D6FF63] animate-pulse" />
-                    <span className="text-[#F4F5F2] font-semibold tracking-wider">PROOFPATH AI SENTINEL</span>
+            {/* Right Area: Interactive Triangulation Preview Hero Card */}
+            <div className="lg:col-span-6 relative">
+              <div className="glass-card rounded-2xl p-6 sm:p-7 space-y-5 border border-slate-200/90 shadow-xl relative overflow-hidden">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-bold text-xs">
+                      3W
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900">Multi-Source Verification Engine</div>
+                      <div className="text-[11px] text-slate-500">Live comparison: Job vs Résumé vs GitHub Code</div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-[#A9B0BC]">
-                    <span className="hidden sm:inline">STATE: MONITORING</span>
-                    <span className="px-2.5 py-0.5 rounded bg-[#171D25] text-[#D6FF63] border border-[#29313B] font-semibold">
-                      60 FPS STREAM
+                  <span className="text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Audit Grade
+                  </span>
+                </div>
+
+                {/* 3 Columns Preview */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-700">
+                      <Briefcase className="w-3.5 h-3.5" />
+                      <span>Job Posting</span>
+                    </div>
+                    <div className="text-xs text-slate-700 leading-snug">
+                      "FastAPI & PostgreSQL backend microservices with automated testing"
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-mono">Weight: 2 (Required)</div>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-amber-700">
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Applicant Résumé</span>
+                    </div>
+                    <div className="text-xs text-slate-700 leading-snug">
+                      "Architected high-throughput FastAPI services processing 15M requests"
+                    </div>
+                    <div className="text-[10px] text-emerald-700 font-semibold">Claim Extracted</div>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-blue-700">
+                      <Code2 className="w-3.5 h-3.5" />
+                      <span>GitHub Source</span>
+                    </div>
+                    <div className="text-xs text-slate-700 leading-snug">
+                      Verified APIRouters, dependency injection, and pytest fixtures
+                    </div>
+                    <div className="text-[10px] text-blue-700 font-mono">SHA: 9df382a</div>
+                  </div>
+                </div>
+
+                {/* Live Code Excerpt Preview */}
+                <div className="rounded-xl border border-slate-800 bg-slate-950 p-3.5 font-mono text-xs text-slate-200 space-y-1">
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800 pb-2 mb-2">
+                    <span className="flex items-center gap-1.5 text-blue-400">
+                      <GitCommit className="w-3.5 h-3.5" />
+                      backend/app/main.py:L28-L34
                     </span>
+                    <span className="text-emerald-400 font-semibold">Verified Match</span>
                   </div>
+                  <div className="text-slate-400 select-none text-[11px]">28  app.include_router(api_router, prefix="/api/v1")</div>
+                  <div className="text-slate-300 select-none text-[11px]">29  app.add_middleware(CORSMiddleware, allow_origins=...)</div>
+                  <div className="text-slate-400 select-none text-[11px]">30  # Verified dependency injection & session lifecycle</div>
                 </div>
 
-                {/* Looping Owl Video Player - Expanded Height & Scale */}
-                <div className="relative w-full aspect-video min-h-[320px] sm:min-h-[440px] md:min-h-[500px] lg:min-h-[540px] xl:min-h-[580px] bg-[#090D12] flex items-center justify-center overflow-hidden">
-                  <video
-                    src="/hero-owl.mp4"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    preload="metadata"
-                    onLoadedData={() => setVideoLoaded(true)}
-                    className={`w-full h-full object-contain sm:scale-105 lg:scale-110 transition-all duration-700 ${
-                      videoLoaded ? 'opacity-100' : 'opacity-80'
-                    }`}
-                  />
-
-                  {/* Seamless Vignette Overlay to blend video boundaries naturally into the page */}
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#090D12]/60 via-transparent to-[#090D12]/40" />
-                  <div className="pointer-events-none absolute inset-0 bg-radial from-transparent via-transparent to-[#090D12]/40" />
-
-                  {/* Corner Targeting Reticles */}
-                  <div className="pointer-events-none absolute top-14 left-5 w-5 h-5 border-t-2 border-l-2 border-[#D6FF63]/60" />
-                  <div className="pointer-events-none absolute top-14 right-5 w-5 h-5 border-t-2 border-r-2 border-[#D6FF63]/60" />
-                  <div className="pointer-events-none absolute bottom-14 left-5 w-5 h-5 border-b-2 border-l-2 border-[#D6FF63]/60" />
-                  <div className="pointer-events-none absolute bottom-14 right-5 w-5 h-5 border-b-2 border-r-2 border-[#D6FF63]/60" />
-                </div>
-
-                {/* Bottom HUD Telemetry Status */}
-                <div className="absolute bottom-0 inset-x-0 z-20 flex items-center justify-between px-4 py-2.5 bg-[#090D12]/75 backdrop-blur-md border-t border-[#29313B]/80 text-[11px] font-mono">
-                  <div className="flex items-center gap-2 text-[#A9B0BC]">
-                    <Cpu className="w-3.5 h-3.5 text-[#D6FF63]" />
-                    <span>NEURAL CITATION AUDITOR</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-[#D6FF63]">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span className="font-semibold tracking-wide">100% EVIDENCE GROUNDED</span>
-                  </div>
+                {/* Confidence Metrics Bar */}
+                <div className="flex items-center justify-between pt-1 text-xs">
+                  <span className="text-slate-600 font-medium">Estimated Compatibility:</span>
+                  <span className="font-bold text-blue-700 font-mono bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                    94.2% (Evidence-Backed)
+                  </span>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* Core Philosophy Banner */}
-      <section className="py-8 bg-[#11161D]/60 border-b border-[#29313B]/60">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-[#A9B0BC]">
-            <div className="flex items-center gap-2.5 text-[#F4F5F2]">
-              <ShieldCheck className="w-4 h-4 text-[#D6FF63]" />
-              <span className="font-semibold tracking-wide">The ProofPath Integrity Manifesto:</span>
-            </div>
-            <div className="flex flex-wrap items-center gap-4 text-[11px] sm:text-xs">
-              <span className="text-[#F4F5F2]">Missing résumé ≠ Missing skill</span>
-              <span className="text-[#29313B]">•</span>
-              <span className="text-[#F4F5F2]">Not in repo ≠ Incompetence</span>
-              <span className="text-[#29313B]">•</span>
-              <span className="text-[#F4F5F2]">README mention ≠ Production implementation</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Interactive Evidence Simulator (Multi-Source Triangulation Demo) */}
-      <section className="py-20 sm:py-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#171D25] border border-[#29313B] text-xs font-mono text-[#D6FF63] mb-4">
-            <Layers className="w-3.5 h-3.5" />
-            <span>TRIANGULATION ENGINE IN ACTION</span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-headline font-bold text-[#F4F5F2] mb-4">
-            How ProofPath Evaluates Real Code
+      {/* Triangulation Deep Dive Section */}
+      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <h2 className="text-2xl sm:text-3xl font-headline font-bold text-slate-900 tracking-tight">
+            How Triangulation Detects Real Hiring Signals
           </h2>
-          <p className="text-sm sm:text-base text-[#A9B0BC] leading-relaxed">
-            Hiring managers don't trust self-reported skills. We correlate job requirements against résumé claims and inspect actual source code lines to prove genuine experience.
+          <p className="text-sm text-slate-600 mt-2">
+            Most tools analyze only a résumé or run generic quiz trivia. ProofPath independently cross-verifies all three sources.
           </p>
+        </div>
 
-          {/* Interactive Scenario Switcher */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-2 p-1.5 rounded-xl bg-[#11161D] border border-[#29313B] max-w-xl mx-auto">
+        {/* Tab Controls */}
+        <div className="flex justify-center mb-8">
+          <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 gap-1 text-xs font-semibold">
             <button
               onClick={() => setActiveTab('demonstrated')}
-              className={`px-4 py-2 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-lg transition-all cursor-pointer ${
                 activeTab === 'demonstrated'
-                  ? 'bg-[#D6FF63] text-[#090D12] font-semibold shadow-[0_0_15px_rgba(214,255,99,0.25)]'
-                  : 'text-[#A9B0BC] hover:text-white hover:bg-[#171D25]'
+                  ? 'bg-white text-blue-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               1. Full Multi-Source Match
             </button>
             <button
               onClick={() => setActiveTab('unverified')}
-              className={`px-4 py-2 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-lg transition-all cursor-pointer ${
                 activeTab === 'unverified'
-                  ? 'bg-[#F3B66D] text-[#090D12] font-semibold shadow-[0_0_15px_rgba(243,182,109,0.25)]'
-                  : 'text-[#A9B0BC] hover:text-white hover:bg-[#171D25]'
+                  ? 'bg-white text-amber-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               2. Unverified Résumé Claim
             </button>
             <button
               onClick={() => setActiveTab('hidden')}
-              className={`px-4 py-2 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-lg transition-all cursor-pointer ${
                 activeTab === 'hidden'
-                  ? 'bg-[#A99BFF] text-[#090D12] font-semibold shadow-[0_0_15px_rgba(169,155,255,0.25)]'
-                  : 'text-[#A9B0BC] hover:text-white hover:bg-[#171D25]'
+                  ? 'bg-white text-indigo-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               3. Hidden Repo Strength
@@ -228,268 +218,162 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Dynamic Triangulation Card */}
-        <div className="rounded-3xl border border-[#29313B] bg-[#11161D] p-6 sm:p-8 shadow-2xl relative">
-          
-          {/* Header Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-4 pb-6 mb-6 border-b border-[#29313B]">
+        {/* Dynamic Card */}
+        <div className="glass-card rounded-2xl p-6 sm:p-8 shadow-md border border-slate-200">
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-5 mb-5 border-b border-slate-200">
             <div>
-              <div className="text-xs font-mono text-[#D6FF63] uppercase tracking-wider mb-1">
+              <div className="text-xs font-semibold text-blue-700 uppercase tracking-wider mb-1">
                 {activeTab === 'demonstrated' && 'CONFIRMED COMPETENCY // HIGH HIRING VALUE'}
                 {activeTab === 'unverified' && 'POTENTIAL ATS RISK // CODE ARTIFACT MISSING'}
                 {activeTab === 'hidden' && 'UNDER-REPRESENTED SKILL // PORTFOLIO ASSET FOUND'}
               </div>
-              <h3 className="text-lg sm:text-xl font-headline font-bold text-white">
+              <h3 className="text-xl font-bold text-slate-900">
                 {activeTab === 'demonstrated' && 'FastAPI & REST Architecture'}
                 {activeTab === 'unverified' && 'Kubernetes & Helm Orchestration'}
                 {activeTab === 'hidden' && 'PostgreSQL Optimization & Indexing'}
               </h3>
             </div>
-            <div>
-              <StatusBadge
-                status={
-                  activeTab === 'demonstrated'
-                    ? 'demonstrated'
-                    : activeTab === 'unverified'
-                    ? 'partial_or_needs_review'
-                    : 'demonstrated'
-                }
-                size="lg"
-              />
-            </div>
+            <StatusBadge
+              status={
+                activeTab === 'demonstrated'
+                  ? 'demonstrated'
+                  : activeTab === 'unverified'
+                  ? 'partial_or_needs_review'
+                  : 'demonstrated'
+              }
+              size="lg"
+            />
           </div>
 
-          {/* 3 Source Columns */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* 1. Job Requirement */}
-            <div className="bg-[#171D25] p-5 rounded-2xl border border-[#29313B]">
-              <div className="flex items-center gap-2 text-xs font-mono text-[#A99BFF] mb-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
+              <div className="flex items-center gap-2 text-xs font-bold text-indigo-700 mb-2">
                 <Briefcase className="w-4 h-4" />
-                <span className="font-semibold">1. Employer Requirement</span>
+                <span>1. Employer Requirement</span>
               </div>
-              <div className="text-xs font-medium text-white mb-2">
+              <p className="text-xs text-slate-800 leading-relaxed">
                 {activeTab === 'demonstrated' && 'Senior Backend Engineer: Must demonstrate production experience building REST microservices in FastAPI.'}
                 {activeTab === 'unverified' && 'DevOps Engineer: Hands-on experience configuring Kubernetes clusters, Helm charts, and ingress routing.'}
                 {activeTab === 'hidden' && 'Database Reliability: Proficiency analyzing slow SQL queries, table indexes, and transaction isolation.'}
-              </div>
-              <div className="text-[11px] font-mono text-[#A9B0BC]">Priority: Required (Weight: 2)</div>
+              </p>
             </div>
 
-            {/* 2. Résumé Claim */}
-            <div className="bg-[#171D25] p-5 rounded-2xl border border-[#29313B]">
-              <div className="flex items-center gap-2 text-xs font-mono text-[#F3B66D] mb-3">
+            <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
+              <div className="flex items-center gap-2 text-xs font-bold text-amber-700 mb-2">
                 <FileText className="w-4 h-4" />
-                <span className="font-semibold">2. Applicant Résumé</span>
+                <span>2. Applicant Résumé</span>
               </div>
-              <div className="text-xs font-medium text-white mb-2">
+              <p className="text-xs text-slate-800 leading-relaxed">
                 {activeTab === 'demonstrated' && '"Architected high-throughput FastAPI services processing 15M monthly requests with 99.98% uptime."'}
                 {activeTab === 'unverified' && '"Managed multi-region Kubernetes deployments and automated cluster failover policies."'}
                 {activeTab === 'hidden' && 'Not explicitly mentioned on résumé. (Candidate under-promoted their actual database work!)'}
-              </div>
-              <div className="text-[11px] font-mono text-[#A9B0BC]">
-                Status:{' '}
-                {activeTab === 'hidden' ? (
-                  <span className="text-[#F3B66D]">Omitted from CV</span>
-                ) : (
-                  <span className="text-[#D6FF63]">Explicitly Claimed</span>
-                )}
-              </div>
+              </p>
             </div>
 
-            {/* 3. GitHub Codebase */}
-            <div className="bg-[#171D25] p-5 rounded-2xl border border-[#29313B]">
-              <div className="flex items-center gap-2 text-xs font-mono text-[#D6FF63] mb-3">
+            <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
+              <div className="flex items-center gap-2 text-xs font-bold text-blue-700 mb-2">
                 <Code2 className="w-4 h-4" />
-                <span className="font-semibold">3. Repository Verification</span>
+                <span>3. Repository Verification</span>
               </div>
-              <div className="text-xs font-medium text-white mb-2">
+              <p className="text-xs text-slate-800 leading-relaxed">
                 {activeTab === 'demonstrated' && 'Verified router declarations, dependency injection, and Pydantic validation across 4 modules.'}
                 {activeTab === 'unverified' && '0 Kubernetes manifests or Helm charts detected across analyzed repository scope.'}
                 {activeTab === 'hidden' && 'Discovered composite B-Tree indexes and migration rollback scripts in backend/app/db/.'}
-              </div>
-              <div className="text-[11px] font-mono text-[#A9B0BC]">
-                Evidence:{' '}
-                {activeTab === 'unverified' ? (
-                  <span className="text-[#E77D83]">Zero Supporting Code</span>
-                ) : (
-                  <span className="text-[#D6FF63]">Verified In Code Snapshot</span>
-                )}
-              </div>
+              </p>
             </div>
           </div>
 
-          {/* Cryptographic Citation Output */}
-          <div className="bg-[#090D12] rounded-2xl border border-[#29313B] p-5 font-mono text-xs overflow-x-auto">
-            <div className="flex flex-wrap items-center justify-between pb-3 mb-3 border-b border-[#29313B] text-[11px] text-[#A9B0BC] gap-2">
-              <div className="flex items-center gap-2">
-                <GitCommit className="w-4 h-4 text-[#D6FF63]" />
-                <span className="text-white font-semibold">
-                  {activeTab === 'demonstrated' && 'backend/app/api/v1/jobs.py'}
-                  {activeTab === 'unverified' && 'infrastructure/k8s/deployment.yaml'}
-                  {activeTab === 'hidden' && 'backend/app/db/migrations/004_indexes.sql'}
-                </span>
-                <span className="text-[#50566A]">
-                  SHA: {activeTab === 'unverified' ? 'NO_MATCH' : '9df382a'}
-                </span>
-              </div>
-              <div className="text-[11px] text-[#D6FF63]">
-                {activeTab === 'demonstrated' && 'Lines 42–48 (Verified Match)'}
-                {activeTab === 'unverified' && 'File Not Found in Analyzed Tree'}
-                {activeTab === 'hidden' && 'Lines 12–19 (Verified Match)'}
-              </div>
-            </div>
-
-            {activeTab === 'demonstrated' && (
-              <div className="space-y-1 text-[#F4F5F2]">
-                <div><span className="text-[#50566A] mr-4 select-none">42</span>@router.post("/import", response_model=JobResponse, status_code=201)</div>
-                <div><span className="text-[#50566A] mr-4 select-none">43</span>def import_job(job_in: JobImportRequest, db: Session = Depends(get_db)):</div>
-                <div><span className="text-[#50566A] mr-4 select-none">44</span>    raw_text = fetch_job_url_safely(job_in.url)</div>
-                <div><span className="text-[#50566A] mr-4 select-none">45</span>    extracted = extract_grounded_requirements(raw_text)</div>
-                <div><span className="text-[#50566A] mr-4 select-none">46</span>    return save_and_format_job(db, job_in, extracted)</div>
-              </div>
-            )}
-
-            {activeTab === 'unverified' && (
-              <div className="py-2 text-[#E77D83] flex items-center gap-2">
-                <Lock className="w-4 h-4" />
-                <span>[AUDIT WARNING]: Repository contains no matching Kubernetes configuration. In technical screens, interviewers may challenge this claim.</span>
-              </div>
-            )}
-
-            {activeTab === 'hidden' && (
-              <div className="space-y-1 text-[#F4F5F2]">
-                <div><span className="text-[#50566A] mr-4 select-none">12</span>CREATE INDEX CONCURRENTLY idx_assessments_user_status</div>
-                <div><span className="text-[#50566A] mr-4 select-none">13</span>ON assessments (user_id, status)</div>
-                <div><span className="text-[#50566A] mr-4 select-none">14</span>WHERE deleted_at IS NULL;</div>
-              </div>
-            )}
-          </div>
-
-          {/* Actionable Recommendation Bar */}
-          <div className="mt-6 p-4 rounded-xl bg-[#171D25] border border-[#29313B] flex items-center justify-between text-xs font-mono">
-            <div className="flex items-center gap-2 text-[#A9B0BC]">
-              <Sparkles className="w-4 h-4 text-[#D6FF63]" />
-              <span className="text-white font-semibold">Recommended Candidate Action:</span>
-              <span>
-                {activeTab === 'demonstrated' && 'Keep automated test coverage active to preserve demonstrated status.'}
-                {activeTab === 'unverified' && 'Add sample Helm charts or clarify proprietary cluster scope on résumé.'}
-                {activeTab === 'hidden' && 'Add "PostgreSQL query index optimization" to your CV project bullets immediately!'}
+          <div className="p-4 rounded-xl bg-slate-950 font-mono text-xs text-slate-200 overflow-x-auto">
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-[11px] text-slate-400">
+              <span className="text-blue-400">
+                {activeTab === 'demonstrated' && 'backend/app/api/v1/jobs.py:42-46'}
+                {activeTab === 'unverified' && 'infrastructure/k8s/deployment.yaml'}
+                {activeTab === 'hidden' && 'backend/app/db/migrations/004_indexes.sql:12-16'}
+              </span>
+              <span className="text-emerald-400">
+                {activeTab === 'unverified' ? 'File Not in Tree' : 'Verified Commit SHA: 9df382a'}
               </span>
             </div>
-            <Link to={user ? "/wizard" : "/register"} className="hidden sm:inline-flex items-center gap-1 text-[#D6FF63] hover:underline">
-              <span>Run on your repo</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-        </div>
-      </section>
-
-      {/* Triangulation Pillars */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-[#29313B]/70">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-2xl sm:text-3xl font-headline font-bold text-[#F4F5F2] mb-3">
-            Engineered for Grounded Authenticity
-          </h2>
-          <p className="text-sm text-[#A9B0BC]">
-            We reject arbitrary AI scores. ProofPath operates like a senior principal engineer reviewing technical PRs.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-[#11161D] p-7 rounded-2xl border border-[#29313B] relative hover:border-[#D6FF63]/50 transition-all hover:-translate-y-1 group">
-            <div className="w-12 h-12 rounded-xl bg-[#D6FF63]/15 border border-[#D6FF63]/30 flex items-center justify-center text-[#D6FF63] mb-6 group-hover:scale-105 transition-transform">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-headline font-semibold text-white mb-2.5">
-              SSRF-Protected Ingestion
-            </h3>
-            <p className="text-xs text-[#A9B0BC] leading-relaxed">
-              Job descriptions can be imported directly from live postings. ProofPath resolves DNS records deterministically and blocks cloud metadata IPs and private VPC CIDRs.
-            </p>
-          </div>
-
-          <div className="bg-[#11161D] p-7 rounded-2xl border border-[#29313B] relative hover:border-[#A99BFF]/50 transition-all hover:-translate-y-1 group">
-            <div className="w-12 h-12 rounded-xl bg-[#A99BFF]/15 border border-[#A99BFF]/30 flex items-center justify-center text-[#A99BFF] mb-6 group-hover:scale-105 transition-transform">
-              <Terminal className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-headline font-semibold text-white mb-2.5">
-              Bounded Source Inspection
-            </h3>
-            <p className="text-xs text-[#A9B0BC] leading-relaxed">
-              We never execute untrusted user code or run arbitrary scripts. Static AST inspection is capped at 30 source files and 50KB per file, ensuring deterministic evaluation.
-            </p>
-          </div>
-
-          <div className="bg-[#11161D] p-7 rounded-2xl border border-[#29313B] relative hover:border-[#F3B66D]/50 transition-all hover:-translate-y-1 group">
-            <div className="w-12 h-12 rounded-xl bg-[#F3B66D]/15 border border-[#F3B66D]/30 flex items-center justify-center text-[#F3B66D] mb-6 group-hover:scale-105 transition-transform">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-headline font-semibold text-white mb-2.5">
-              Deterministic Citation Audit
-            </h3>
-            <p className="text-xs text-[#A9B0BC] leading-relaxed">
-              Every positive finding requires a verifiable commit-pinned SHA and line excerpt. Any citation that fails SHA or line bounds check is immediately downgraded.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Ready to Proof Your Skills CTA Banner */}
-      <section className="py-16 sm:py-24 bg-gradient-to-b from-[#090D12] via-[#11161D] to-[#090D12] border-t border-[#29313B]/70">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="p-8 sm:p-14 rounded-3xl border border-[#29313B] bg-[#171D25]/90 relative overflow-hidden shadow-2xl">
-            <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#D6FF63]/10 blur-[90px] pointer-events-none rounded-full" />
-            <div className="relative z-10">
-              <h2 className="text-3xl sm:text-4xl font-headline font-bold text-white mb-4">
-                Ready to make your engineering evidence indisputable?
-              </h2>
-              <p className="text-sm sm:text-base text-[#A9B0BC] max-w-2xl mx-auto mb-8 font-sans">
-                Connect your public GitHub repository, upload your current résumé, and generate a verified multi-source report in under 60 seconds.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <Link
-                  to={user ? "/wizard" : "/register"}
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#D6FF63] text-[#090D12] font-headline font-bold text-sm hover:bg-[#c2ec4b] transition-all shadow-[0_0_25px_rgba(214,255,99,0.3)] hover:-translate-y-0.5"
-                >
-                  <span>{user ? "Start New Assessment" : "Create Free Account"}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  to={user ? "/dashboard" : "/login"}
-                  className="inline-flex items-center gap-2 px-7 py-4 rounded-xl bg-[#090D12] text-[#F4F5F2] border border-[#29313B] font-headline font-medium text-sm hover:bg-[#11161D] transition-colors"
-                >
-                  <span>{user ? "Go to Workspace" : "Sign In to Existing Account"}</span>
-                </Link>
+            {activeTab === 'demonstrated' && (
+              <div className="space-y-1">
+                <div><span className="text-slate-600 mr-3">42</span>@router.post("/import", response_model=JobResponse, status_code=201)</div>
+                <div><span className="text-slate-600 mr-3">43</span>def import_job(job_in: JobImportRequest, db: Session = Depends(get_db)):</div>
+                <div><span className="text-slate-600 mr-3">44</span>    raw_text = fetch_job_url_safely(job_in.url)</div>
+                <div><span className="text-slate-600 mr-3">45</span>    return save_and_format_job(db, job_in, extracted)</div>
               </div>
+            )}
+            {activeTab === 'unverified' && (
+              <div className="text-amber-400 italic">
+                Scope Limitation: No matching Kubernetes configuration files found in repository snapshot.
+              </div>
+            )}
+            {activeTab === 'hidden' && (
+              <div className="space-y-1">
+                <div><span className="text-slate-600 mr-3">12</span>CREATE INDEX CONCURRENTLY idx_assessments_user_created</div>
+                <div><span className="text-slate-600 mr-3">13</span>ON assessments (user_id, created_at DESC);</div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Feature Pillars Section */}
+      <section className="py-16 bg-white/70 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-xs space-y-2">
+              <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-slate-900">Deterministic Validation</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Every code finding is verified against line numbers, content hashes, and commit SHAs with zero fabricated quotes.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-xs space-y-2">
+              <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-slate-900">Personalized Testing</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Custom MCQ and written architecture questions scored deterministically and against transparent rubrics.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-xs space-y-2">
+              <div className="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-slate-900">Local RAG Retrieval</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Full-text search in PostgreSQL grounds improvement tasks in verified documentation and learning resources.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-xs space-y-2">
+              <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                <Database className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-slate-900">PostgreSQL & Supabase</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Unified relational schema with Alembic migrations, connection pooling, and strict user-scoped security.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-[#29313B]/80 bg-[#090D12] text-xs font-mono text-[#A9B0BC]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg bg-[#D6FF63] flex items-center justify-center text-[#090D12] font-bold">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-white font-bold tracking-tight">ProofPath Sentinel</span>
-              <span className="mx-2 text-[#29313B]">•</span>
-              <span>Developer Evidence Intelligence Platform</span>
-            </div>
+      <footer className="border-t border-slate-200 bg-slate-50 py-10 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2 font-bold text-slate-800">
+            <ShieldCheck className="w-4 h-4 text-blue-600" />
+            <span>ProofPath Platform</span>
+            <span className="font-normal text-slate-400">| Kurukshetra 2026 Production Edition</span>
           </div>
-          <div className="flex items-center gap-6">
-            <Link to="/jobs/discover" className="hover:text-[#D6FF63] transition-colors">
-              Job Discovery
-            </Link>
-            <Link to="/wizard" className="hover:text-[#D6FF63] transition-colors">
-              Assessment Wizard
-            </Link>
-            <Link to="/dashboard" className="hover:text-[#D6FF63] transition-colors">
-              Workspace
-            </Link>
+          <div className="text-slate-500">
+            Built for enterprise-grade developer evidence verification.
           </div>
         </div>
       </footer>

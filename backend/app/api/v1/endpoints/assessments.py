@@ -20,6 +20,18 @@ from app.api.v1.endpoints.resumes import format_resume_response
 from app.api.v1.endpoints.repositories import format_repo_response
 from app.services.auth_service import get_current_user
 from app.services.assessment_service import create_and_run_assessment
+from app.models.quiz import Quiz, QuizAttempt
+from app.schemas.quiz import (
+    QuizClientResponse,
+    QuizSubmitRequest,
+    QuizAttemptResultResponse,
+    QuestionResultResponse
+)
+from app.services.quiz_service import (
+    generate_personalized_quiz,
+    format_quiz_for_candidate,
+    grade_and_submit_quiz
+)
 
 router = APIRouter(prefix="/assessments", tags=["Assessments"])
 
@@ -196,3 +208,134 @@ def compare_assessment_versions(
         previous_assessment_id=previous_id,
         user_id=current_user.id
     )
+
+
+@router.post("/{assessment_id}/quiz/generate", response_model=QuizClientResponse, summary="Generate or retrieve personalized skill test")
+def get_or_generate_assessment_quiz(
+    assessment_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Generate or fetch a 5-8 question personalized skill test based on the assessment's requirements,
+    demonstrated code evidence, and identified gaps. Answer keys are securely hidden from candidate view.
+    """
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id, Assessment.user_id == current_user.id).first()
+    if not assessment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assessment not found.")
+
+    quiz = generate_personalized_quiz(db=db, assessment=assessment, user=current_user)
+    return format_quiz_for_candidate(quiz)
+
+
+@router.get("/{assessment_id}/quiz", response_model=QuizClientResponse, summary="Get personalized skill test")
+def get_assessment_quiz(
+    assessment_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id, Assessment.user_id == current_user.id).first()
+    if not assessment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assessment not found.")
+
+    quiz = db.query(Quiz).filter(Quiz.assessment_id == assessment_id, Quiz.user_id == current_user.id).first()
+    if not quiz:
+        quiz = generate_personalized_quiz(db=db, assessment=assessment, user=current_user)
+
+    return format_quiz_for_candidate(quiz)
+
+
+@router.post("/{assessment_id}/quiz/submit", response_model=QuizAttemptResultResponse, summary="Submit and score personalized skill test")
+def submit_assessment_quiz(
+    assessment_id: str,
+    submission: QuizSubmitRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Submit candidate answers for deterministic MCQ grading and transparent rubric evaluation for written questions.
+    Persists attempt in PostgreSQL with full audit trail and returns transparent scoring breakdown.
+    """
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id, Assessment.user_id == current_user.id).first()
+    if not assessment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assessment not found.")
+
+    return grade_and_submit_quiz(
+        db=db,
+        quiz_id=submission.quiz_id,
+        assessment_id=assessment_id,
+        user_id=current_user.id,
+        submission=submission
+    )
+
+
+@router.get("/{assessment_id}/quiz/attempts", response_model=List[QuizAttemptResultResponse], summary="List previous test attempts for an assessment")
+def list_assessment_quiz_attempts(
+    assessment_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id, Assessment.user_id == current_user.id).first()
+    if not assessment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assessment not found.")
+
+    attempts = db.query(QuizAttempt).filter(
+        QuizAttempt.assessment_id == assessment_id,
+        QuizAttempt.user_id == current_user.id
+    ).order_by(QuizAttempt.submitted_at.desc()).all()
+
+    results: List[QuizAttemptResultResponse] = []
+    for att in attempts:
+        obs = []
+        try:
+            obs = json.loads(att.skill_observations_json)
+        except Exception:
+            pass
+
+        answer_responses: List[QuestionResultResponse] = []
+        for ans in att.answers:
+            q = ans.question
+            rubric = {}
+            try:
+                rubric = json.loads(ans.rubric_breakdown_json)
+            except Exception:
+                pass
+
+            answer_responses.append(
+                QuestionResultResponse(
+                    question_id=ans.question_id,
+                    requirement_id=q.requirement_id if q else "REQ",
+                    skill_name=q.skill_name if q else "General",
+                    question_type=q.question_type if q else "written",
+                    question_text=q.question_text if q else "",
+                    user_answer=ans.user_answer,
+                    correct_answer=q.correct_answer if q else "",
+                    is_correct=ans.is_correct,
+                    score_awarded=ans.score_awarded,
+                    max_points=ans.max_points,
+                    explanation=q.explanation if q else "",
+                    evaluation_feedback=ans.evaluation_feedback,
+                    rubric_breakdown=rubric
+                )
+            )
+
+        results.append(
+            QuizAttemptResultResponse(
+                id=att.id,
+                quiz_id=att.quiz_id,
+                assessment_id=att.assessment_id,
+                total_score=att.total_score,
+                max_score=att.max_score,
+                percentage=att.percentage,
+                passed=att.passed,
+                mcq_score=att.mcq_score,
+                written_score=att.written_score,
+                feedback_summary=att.feedback_summary,
+                skill_observations=obs,
+                submitted_at=att.submitted_at,
+                answers=answer_responses,
+                recommended_next_steps=[]
+            )
+        )
+
+    return results

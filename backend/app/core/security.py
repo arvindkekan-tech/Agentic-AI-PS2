@@ -51,9 +51,22 @@ def create_access_token(subject: Union[str, Any], expires_delta: Optional[timede
 
 
 def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
-    """Decode and validate JWT access token."""
+    """Decode and validate JWT access token using ProofPath secret or Supabase JWT secret."""
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        return payload
+        return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     except jwt.PyJWTError:
-        return None
+        pass
+
+    if settings.SUPABASE_JWT_SECRET:
+        try:
+            # Supabase auth signs tokens with their project JWT secret
+            return jwt.decode(
+                token,
+                settings.SUPABASE_JWT_SECRET,
+                algorithms=["HS256"],
+                options={"verify_aud": False}
+            )
+        except jwt.PyJWTError:
+            pass
+
+    return None

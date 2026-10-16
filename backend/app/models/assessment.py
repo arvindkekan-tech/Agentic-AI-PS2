@@ -42,3 +42,4 @@ class Assessment(Base):
     resume = relationship("Resume", back_populates="assessments")
     repository = relationship("Repository", back_populates="assessments")
     requirements = relationship("RequirementAssessment", back_populates="assessment", cascade="all, delete-orphan", order_by="RequirementAssessment.requirement_id")
+    quizzes = relationship("Quiz", back_populates="assessment", cascade="all, delete-orphan", order_by="Quiz.created_at.desc()")

@@ -132,7 +132,7 @@ def create_and_run_assessment(
 
     scores = calculate_assessment_scores(validated_findings)
     alignment_matrix = build_3way_alignment_matrix(validated_findings)
-    recommendations = generate_actionable_recommendations(validated_findings)
+    recommendations = generate_actionable_recommendations(validated_findings, db=db)
     file_findings = map_file_evidence_findings(validated_findings, snapshot.get("inspected_files", []))
 
     # 6. Persist Assessment

@@ -1,185 +1,184 @@
-# ProofPath (Phase 1)
-> **“Your code tells a story. Make the evidence visible.”**
+# ProofPath — Evidence Intelligence Platform
+> **"Your code tells a story. Make the evidence visible."**
 
-ProofPath is a developer-intelligence platform that performs rigorous, multi-source evidence audits. It compares three distinct sources of truth:
-1. **Job Requirements:** What the employer specifically asks for.
-2. **Résumé Claims:** What the applicant explicitly documents.
-3. **Repository Evidence:** What the analyzed GitHub source code actually demonstrates.
+ProofPath is a production-grade **career intelligence SaaS** built for the Kurukshetra 2026 Hackathon. It performs rigorous, zero-hallucination multi-source evidence audits by comparing three distinct sources of truth:
 
----
-
-## 1. Core Principles & Philosophy
-
-ProofPath adheres to strict evaluation integrity:
-* **Never conflate findings:**
-  * A missing résumé mention **does not prove** a missing skill.
-  * A skill not found in the inspected repository **does not prove** the candidate lacks it.
-  * A dependency or README mention alone **does not establish** implementation.
-* **Rigorous Status Taxonomy:**
-  * `demonstrated`: Validated by verifiable code citations.
-  * `partial_or_needs_review`: Partially visible in test code, configurations, or résumé claims without deep runtime code.
-  * `not_demonstrated_in_analyzed_scope`: Absent from the analyzed files.
-  * `unable_to_assess`: Conflicting or insufficient data.
-* **Deterministic Citation Verification:**
-  * Every repository citation is verified against the exact commit SHA, file path, line numbers, and excerpt.
-  * A `demonstrated` repository status strictly requires at least one validated supporting citation. Zero-evidence claims are automatically downgraded to `partial_or_needs_review`.
-* **Safe Ingestion & Isolation:**
-  * SSRF protection blocks private network access (RFC 1918), loopback, link-local metadata services, and unsafe redirect chains.
-  * Bounded repository snapshots exclude binaries, node_modules, lockfiles, and oversized files (>50KB). Untrusted repository code is **never executed**.
+1. **Job Requirements** — What the employer specifically asks for, extracted from job postings or URLs
+2. **Résumé Claims** — What the applicant explicitly documents (PDF / DOCX parsed)
+3. **Repository Evidence** — What analyzed GitHub source code *actually* demonstrates (commit-pinned citations)
 
 ---
 
-## 2. System Architecture
+## Features
+
+| Phase | Capability | Status |
+|-------|-----------|--------|
+| **Core** | JWT Authentication (Argon2 hashing, 24-hour tokens) | ✅ |
+| **Phase 1** | Job ingestion (paste or SSRF-protected URL fetch) | ✅ |
+| **Phase 1** | PDF/DOCX résumé parsing & safe storage | ✅ |
+| **Phase 1** | GitHub repository snapshot inspection (commit-pinned, no code execution) | ✅ |
+| **Phase 1** | Gemini 2.5 Flash AI evaluation with deterministic fallback | ✅ |
+| **Phase 1** | Deterministic citation validation (SHA, file path, line, excerpt) | ✅ |
+| **Phase 2** | 3-Way Alignment Matrix (Job ↔ Résumé ↔ Code) | ✅ |
+| **Phase 2** | Actionable Recommendations with effort tiers & learning resources | ✅ |
+| **Phase 2** | Compatibility / Evidence Coverage / Alignment scoring | ✅ |
+| **Phase 2** | Evidence Change Ledger (compare two assessments for delta tracking) | ✅ |
+| **Phase 2** | Job Discovery (multi-source job search + skill-match ranking) | ✅ |
+| **Phase 3** | Personalized Skill Tests (MCQ + written, rubric grading, attempt history) | ✅ |
+| **Phase 4** | Local RAG Knowledge Base (semantic chunked retrieval, no external calls) | ✅ |
+| **UI** | Premium Blue/White Glassmorphism design system (Tailwind CSS v4) | ✅ |
+
+---
+
+## Architecture
 
 ```
 kurukshetra-2026/
 ├── backend/
 │   ├── app/
-│   │   ├── ai/                      # AI provider adapters (Gemini + Deterministic fallback)
-│   │   ├── api/v1/endpoints/        # REST API endpoints (health, auth, jobs, resumes, repos, assessments)
-│   │   ├── core/                    # Security (Argon2, JWT), Config, Error handling
-│   │   ├── db/                      # SQLAlchemy session and schema initialization
-│   │   ├── models/                  # Database models (User, Job, Resume, Repository, Assessment, Citation)
-│   │   ├── schemas/                 # Pydantic request and response schemas
-│   │   ├── services/                # Domain services (Auth, Job SSRF Ingestion, Resume Parser, GitHub Client, Citation Validator)
-│   │   └── main.py                  # FastAPI application entrypoint with CORS and routers
-│   ├── tests/                       # Automated pytest suite (24 unit and integration tests)
-│   ├── uploads/                     # Isolated local file storage for uploaded résumés
-│   ├── proofpath.db                 # SQLite local database (gitignored)
-│   └── requirements.txt             # Python dependencies
+│   │   ├── ai/                      # AI provider factory (Gemini 2.5 Flash + deterministic fallback)
+│   │   ├── api/v1/endpoints/        # REST API — auth, jobs, resumes, repositories, assessments,
+│   │   │                            #             job-discovery, knowledge
+│   │   ├── core/                    # Config (pydantic-settings), JWT security (Argon2 hash)
+│   │   ├── db/                      # SQLAlchemy session + schema init + curated knowledge seeder
+│   │   ├── models/                  # ORM: User, Job, Resume, Repository, Assessment,
+│   │   │                            #       RequirementAssessment, Citation, Quiz, QuizQuestion,
+│   │   │                            #       QuizAttempt, QuizAttemptAnswer, KnowledgeDocument,
+│   │   │                            #       KnowledgeChunk
+│   │   ├── schemas/                 # Pydantic request/response schemas (quiz, knowledge, assessment)
+│   │   └── services/                # Auth, Job (SSRF), Resume, GitHub, CitationValidator,
+│   │                                #  ScoringService, CareerIntelligence, ChangeLedger,
+│   │                                #  QuizService, KnowledgeService, JobDiscovery
+│   ├── tests/                       # 52 passing pytest unit & integration tests
+│   ├── alembic/                     # Database migrations
+│   ├── requirements.txt
+│   └── uploads/                     # Isolated résumé file storage
+│
 ├── frontend/
 │   ├── src/
-│   │   ├── components/              # Reusable UI (Navbar, StatusBadge, CodeCitationCard, CoverageModal)
-│   │   ├── context/                 # AuthContext (JWT session state)
-│   │   ├── pages/                   # Views (Landing, Login, Register, Dashboard, Wizard, Result, History)
-│   │   ├── services/                # Typed API client
+│   │   ├── components/              # Navbar, StatusBadge, CodeCitationCard, CoverageModal,
+│   │   │                            #  SkillRadarChart, PersonalizedQuizModal
+│   │   ├── context/                 # AuthContext (JWT session + auto-expiry handling)
+│   │   ├── pages/                   # Landing, Login, Register, Dashboard, Wizard (4-step),
+│   │   │                            #  AssessmentResult, AssessmentHistory, JobDiscovery
+│   │   ├── services/                # Typed ApiClient (all endpoints)
 │   │   ├── types/                   # Schema-aligned TypeScript definitions
-│   │   ├── index.css                # Tailwind CSS v4 design tokens (Obsidian, Lime, Graphite, Ivory)
-│   │   └── App.tsx                  # Router with ProtectedRoute wrapper
+│   │   ├── index.css                # Tailwind v4 + glassmorphism utilities
+│   │   └── App.tsx                  # BrowserRouter with ProtectedRoute wrapper
 │   ├── package.json
-│   └── vite.config.ts               # Vite configuration with Tailwind CSS and /api proxy
-├── .env.example                     # Committed environment configuration with placeholders
-├── .gitignore                       # Git ignore rules for Python, Node, SQLite, and secrets
-└── README.md
+│   └── vite.config.ts               # Vite + manual chunk splitting (vendor / icons)
+│
+├── docker-compose.yml               # Optional PostgreSQL + backend container setup
+├── alembic.ini
+└── .env                             # Local secrets (do NOT commit to production)
 ```
 
 ---
 
-## 3. Quickstart & Local Setup
+## Quick Start (Local Development)
 
 ### Prerequisites
-* **Python:** 3.10+ (tested on Python 3.12)
-* **Node.js:** v18+ (tested on Node v24)
-* **Git:** 2.30+
+- Python 3.11+, Node.js 20+
+- A virtual environment at `.venv/` (already configured)
+- Gemini API key (optional — falls back to deterministic engine)
+- GitHub Token (optional — increases GitHub API rate limit)
 
-### Backend Setup
-1. Open a terminal in the project root:
-   ```bash
-   # Create and activate virtual environment
-   python -m venv .venv
-   # Windows:
-   .\.venv\Scripts\activate
-   # macOS/Linux:
-   source .venv/bin/activate
-   ```
-2. Install dependencies:
-   ```bash
-   pip install -r backend/requirements.txt
-   ```
-3. Configure environment:
-   ```bash
-   # Copy example environment configuration
-   cp .env.example .env
-   ```
-   *(Optional)* Configure `GEMINI_API_KEY` for live AI analysis or leave blank to utilize the built-in deterministic rule engine.
-4. Run the backend server:
-   ```bash
-   uvicorn app.main:app --app-dir backend --reload --port 8000
-   ```
-   * Interactive API docs: `http://localhost:8000/docs`
-   * Health check: `http://localhost:8000/api/v1/health`
+### 1. Backend
 
-### Frontend Setup
-1. In a separate terminal, navigate to the `frontend` directory:
-   ```bash
-   cd frontend
-   npm install
-   ```
-2. Start the Vite development server:
-   ```bash
-   npm run dev
-   ```
-3. Open `http://localhost:5173` in your browser.
-
----
-
-## 4. API Endpoints Reference
-
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|:---:|
-| `GET` | `/api/v1/health` | Service and database health check | No |
-| `POST` | `/api/v1/auth/register` | Register new user with Argon2 password hashing | No |
-| `POST` | `/api/v1/auth/login` | Authenticate user and receive signed JWT session token | No |
-| `GET` | `/api/v1/auth/me` | Fetch authenticated user profile | Yes |
-| `POST` | `/api/v1/jobs/import` | Ingest job description from URL or pasted text | Yes |
-| `GET` | `/api/v1/jobs` | List imported jobs for current user | Yes |
-| `POST` | `/api/v1/resumes` | Upload and extract text from PDF or DOCX résumé | Yes |
-| `GET` | `/api/v1/resumes` | List uploaded résumés for current user | Yes |
-| `POST` | `/api/v1/repositories` | Inspect GitHub repository and fetch bounded file snapshot | Yes |
-| `GET` | `/api/v1/repositories` | List inspected repositories for current user | Yes |
-| `POST` | `/api/v1/assessments` | Execute end-to-end multi-source evidence assessment | Yes |
-| `GET` | `/api/v1/assessments` | List all historical assessments for current user | Yes |
-| `GET` | `/api/v1/assessments/{id}` | Retrieve comprehensive assessment findings & citations | Yes |
-| `GET` | `/api/v1/assessments/{id}/evidence` | Retrieve citation verification report and snapshot SHA | Yes |
-
----
-
-## 5. Automated Testing & Verification
-
-### Running Backend Tests
-Execute pytest across the 24 automated unit and integration tests:
-```bash
-.\.venv\Scripts\pytest backend\tests -v
+```powershell
+# From the project root
+.venv\Scripts\uvicorn app.main:app --reload --app-dir backend
 ```
-**Test Coverage Includes:**
-* User registration, password hashing (Argon2), login, and session validation.
-* Resource ownership barriers (User A cannot access User B's jobs, résumés, or assessments).
-* SSRF prevention (blocking localhost, 127.0.0.1, 10.0.0.0/8, 169.254.169.254, non-HTTP schemes).
-* Job requirement extraction from pasted text and public postings.
-* Résumé parsing (PDF and DOCX extraction, empty file rejection, size limits).
-* Deterministic citation validator (SHA verification, line bounds, exact excerpt match).
-* Status downgrade rule enforcement (downgrading 'demonstrated' if valid citations are absent).
-* End-to-end assessment execution, persistence, and preservation of prior results on error.
 
-### Running Frontend Typechecks & Build
-```bash
+The API will start at `http://localhost:8000`. Interactive docs: `http://localhost:8000/docs`
+
+### 2. Frontend
+
+```powershell
 cd frontend
-npm run build
+npm run dev
 ```
-Executes `tsc -b` and Vite production bundling to guarantee type safety and clean asset generation.
+
+The UI will start at `http://localhost:5173`. All `/api` requests are proxied to the backend automatically.
+
+### 3. Environment Variables
+
+Copy `.env.example` to `.env` and fill in your keys:
+
+```env
+DATABASE_URL=sqlite:///./proofpath.db   # or PostgreSQL connection string
+GEMINI_API_KEY=your_gemini_key
+GITHUB_TOKEN=your_github_pat
+SECRET_KEY=a_long_random_secret
+```
 
 ---
 
-## 6. AI Provider Configuration
+## Running Tests
 
-ProofPath includes a modular provider adapter:
-* **Google Gemini Adapter (`GeminiProvider`):**
-  * Uses structured JSON output with strict system constraints.
-  * Treats job descriptions, résumés, and code as untrusted data (mitigates prompt injection).
-  * Configure `GEMINI_API_KEY` and `GEMINI_MODEL=gemini-2.5-flash` in `.env`.
-* **Deterministic Rule Engine (`DeterministicProvider`):**
-  * Automatically activates if `GEMINI_API_KEY` is not provided or during offline unit testing.
-  * Performs exact token matching, extracts verified line spans, and assigns honest non-hallucinated citations.
+```powershell
+# All 52 tests from project root
+.venv\Scripts\pytest backend/tests/ -v
+
+# Expected: 52 passed, 0 failed
+```
 
 ---
 
-## 7. Known Phase 1 Limitations & Phase 2 Roadmap
+## Core Principles
 
-* **Phase 1 Scope:**
-  * Focuses on public GitHub repositories.
-  * Snapshot bounded to top 30 source files (<50KB each) to prevent rate exhaustion.
-  * Static code analysis with deterministic citation verification.
-* **Phase 2 Roadmap:**
-  * Evidence Change Ledger tracking competency diffs across git commits over time.
-  * GitHub App integration with Webhooks for automated commit-triggered reassessment.
-  * Safe sandboxed test execution for verifying test passage claims.
+- **Never conflate findings**: A missing résumé mention does not prove a missing skill. A skill absent from the inspected repository snapshot does not prove the candidate lacks it.
+- **Status taxonomy** (four states only):
+  - `demonstrated` — Validated by verifiable commit-pinned code citations
+  - `partial_or_needs_review` — Partially visible in config, tests, or résumé claims only
+  - `not_demonstrated_in_analyzed_scope` — Absent from analyzed files within inspection limits
+  - `unable_to_assess` — Conflicting or insufficient data
+- **Deterministic citation enforcement**: Every citation is verified against SHA, file path, line range, and excerpt. Zero-evidence `demonstrated` statuses are automatically downgraded.
+- **SSRF protection**: URL-based job ingestion blocks RFC 1918, loopback, link-local metadata services, and unsafe redirects.
+- **Safe repo inspection**: Snapshots exclude binaries, `node_modules`, lockfiles, and files > 50 KB. Repository code is **never executed**.
+
+---
+
+## API Reference
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/auth/register` | Register new user |
+| POST | `/api/v1/auth/login` | Login, receive JWT |
+| GET | `/api/v1/auth/me` | Current user profile |
+| POST | `/api/v1/jobs/import` | Import job (paste or URL) |
+| GET | `/api/v1/jobs` | List user's jobs |
+| POST | `/api/v1/resumes` | Upload résumé (PDF/DOCX) |
+| POST | `/api/v1/repositories` | Inspect GitHub repository |
+| POST | `/api/v1/assessments` | Run full assessment |
+| GET | `/api/v1/assessments/{id}` | Full audit with citations |
+| GET | `/api/v1/assessments/{id}/evidence` | All validated citations |
+| GET | `/api/v1/assessments/{id}/compare/{prev_id}` | Evidence Change Ledger |
+| POST | `/api/v1/assessments/{id}/quiz/generate` | Generate personalized skill test |
+| POST | `/api/v1/assessments/{id}/quiz/submit` | Submit and grade answers |
+| GET | `/api/v1/assessments/{id}/quiz/attempts` | Past attempt history |
+| GET | `/api/v1/job-discovery/search` | Search discovered jobs |
+| POST | `/api/v1/job-discovery/match` | Match jobs to skills |
+| POST | `/api/v1/knowledge/ingest` | Ingest knowledge document |
+| GET | `/api/v1/knowledge/search` | RAG semantic search |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Backend API | FastAPI + Uvicorn (ASGI) |
+| ORM | SQLAlchemy 2.0 |
+| Database | SQLite (local) / PostgreSQL (production) |
+| Auth | Argon2 password hashing + JWT (python-jose) |
+| AI | Gemini 2.5 Flash (google-generativeai) |
+| PDF Parsing | pdfplumber + python-docx |
+| Frontend | React 19 + TypeScript + Vite |
+| Styling | Tailwind CSS v4 + Glassmorphism utilities |
+| Charts | Recharts (Skill Radar) |
+| Testing | pytest + FastAPI TestClient (52 tests) |
+
+---
+
+*Built with ❤️ for Kurukshetra 2026 Hackathon by the ProofPath team.*

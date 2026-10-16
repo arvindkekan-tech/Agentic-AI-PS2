@@ -5,6 +5,8 @@ from app.models.repository import Repository
 from app.models.assessment import Assessment
 from app.models.requirement import RequirementAssessment
 from app.models.citation import Citation
+from app.models.quiz import Quiz, QuizQuestion, QuizAttempt, QuizAttemptAnswer
+from app.models.knowledge import KnowledgeDocument, KnowledgeChunk
 
 __all__ = [
     "User",
@@ -13,5 +15,11 @@ __all__ = [
     "Repository",
     "Assessment",
     "RequirementAssessment",
-    "Citation"
+    "Citation",
+    "Quiz",
+    "QuizQuestion",
+    "QuizAttempt",
+    "QuizAttemptAnswer",
+    "KnowledgeDocument",
+    "KnowledgeChunk"
 ]

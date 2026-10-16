@@ -178,6 +178,14 @@ export interface VerificationChecklistItem {
   verification_criterion: string;
 }
 
+export interface LearningResourceItem {
+  title: string;
+  source_url?: string;
+  url?: string;
+  cited_excerpt?: string;
+  excerpt?: string;
+}
+
 export interface ActionableRecommendation {
   requirement_id: string;
   normalized_skill: string;
@@ -190,6 +198,7 @@ export interface ActionableRecommendation {
   why_it_matters: string;
   suggested_implementation: string;
   verification_checklist: VerificationChecklistItem[];
+  learning_resources?: LearningResourceItem[];
 }
 
 export interface FileEvidenceFinding {
@@ -304,4 +313,108 @@ export interface AssessmentComparisonResponse {
   new_count: number;
   requirement_changes: RequirementChangeItem[];
   narrative_summary: string;
+}
+
+export interface QuestionOptionItem {
+  key: string;
+  text: string;
+}
+
+export interface QuizQuestionClient {
+  id: string;
+  requirement_id: string;
+  skill_name: string;
+  question_type: 'mcq' | 'written';
+  difficulty: string;
+  question_text: string;
+  options: QuestionOptionItem[];
+  points: number;
+  order_index: number;
+}
+
+export interface QuizClient {
+  id: string;
+  assessment_id: string;
+  title: string;
+  description: string;
+  total_questions: number;
+  total_points: number;
+  created_at: string;
+  questions: QuizQuestionClient[];
+}
+
+export interface QuestionAnswerSubmission {
+  question_id: string;
+  answer_text: string;
+}
+
+export interface QuizSubmitRequest {
+  quiz_id: string;
+  answers: QuestionAnswerSubmission[];
+}
+
+export interface QuestionResultItem {
+  question_id: string;
+  requirement_id: string;
+  skill_name: string;
+  question_type: string;
+  question_text: string;
+  user_answer: string;
+  correct_answer?: string;
+  is_correct?: boolean;
+  score_awarded: number;
+  max_points: number;
+  explanation: string;
+  evaluation_feedback: string;
+  rubric_breakdown: Record<string, any>;
+}
+
+export interface SkillObservationItem {
+  skill: string;
+  score: number;
+  max_score: number;
+  percentage: number;
+  status: string;
+}
+
+export interface QuizAttemptResult {
+  id: string;
+  quiz_id: string;
+  assessment_id: string;
+  total_score: number;
+  max_score: number;
+  percentage: number;
+  passed: boolean;
+  mcq_score: number;
+  written_score: number;
+  feedback_summary: string;
+  skill_observations: SkillObservationItem[];
+  submitted_at: string;
+  answers: QuestionResultItem[];
+  recommended_next_steps: string[];
+}
+
+export interface KnowledgeDocument {
+  id: string;
+  title: string;
+  source_url?: string;
+  source_type: string;
+  content_hash: string;
+  chunks_count: number;
+  created_at: string;
+}
+
+export interface KnowledgeChunkItem {
+  id: string;
+  document_id: string;
+  chunk_index: number;
+  chunk_text: string;
+  metadata: Record<string, any>;
+  relevance_score?: number;
+}
+
+export interface KnowledgeSearchResponse {
+  query: string;
+  total_results: number;
+  results: KnowledgeChunkItem[];
 }

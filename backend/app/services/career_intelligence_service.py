@@ -35,6 +35,7 @@ class ActionableRecommendation(BaseModel):
     why_it_matters: str
     suggested_implementation: str
     verification_checklist: List[VerificationChecklistItem]
+    learning_resources: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 class FileEvidenceFinding(BaseModel):
@@ -158,7 +159,8 @@ def build_3way_alignment_matrix(requirements: List[Any]) -> List[AlignmentMatrix
 
 
 def generate_actionable_recommendations(
-    requirements: List[Any]
+    requirements: List[Any],
+    db: Optional[Any] = None
 ) -> List[ActionableRecommendation]:
     """
     Generates actionable, prioritized recommendations categorized by effort:
@@ -302,6 +304,23 @@ def generate_actionable_recommendations(
                     ]
                 )
             )
+
+    # Ground recommendations with real retrieved knowledge resources if database session is provided
+    if db is not None:
+        try:
+            from app.services.knowledge_service import search_knowledge_chunks
+            for rec in recommendations:
+                search_res = search_knowledge_chunks(db, query=rec.normalized_skill, limit=2)
+                resources = []
+                for item in search_res.results:
+                    resources.append({
+                        "title": item.metadata.get("title", "Technical Documentation"),
+                        "source_url": item.metadata.get("source_url"),
+                        "cited_excerpt": item.chunk_text[:280] + ("..." if len(item.chunk_text) > 280 else "")
+                    })
+                rec.learning_resources = resources
+        except Exception:
+            pass
 
     # Sort: quick_win first, then targeted_project, then deep_skill_build
     priority_order = {"quick_win": 0, "targeted_project": 1, "deep_skill_build": 2}

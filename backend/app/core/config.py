@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "proofpath-phase1-super-secure-dev-secret-key-change-in-prod"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
+    SUPABASE_JWT_SECRET: str = ""
     
     # Database (SQLite default for Phase 1 local persistence)
     DATABASE_URL: str = "sqlite:///./proofpath.db"

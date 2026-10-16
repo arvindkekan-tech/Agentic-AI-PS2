@@ -8,7 +8,12 @@ import type {
   EvidenceReport,
   DiscoveredJob,
   JobSourceInfo,
-  AssessmentComparisonResponse
+  AssessmentComparisonResponse,
+  QuizClient,
+  QuizSubmitRequest,
+  QuizAttemptResult,
+  KnowledgeDocument,
+  KnowledgeSearchResponse
 } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
@@ -215,6 +220,41 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify(discoveredJob)
     });
+  }
+
+  // Personalized Skill Testing
+  async getAssessmentQuiz(assessmentId: string): Promise<QuizClient> {
+    return this.request<QuizClient>(`/assessments/${assessmentId}/quiz`);
+  }
+
+  async generateAssessmentQuiz(assessmentId: string): Promise<QuizClient> {
+    return this.request<QuizClient>(`/assessments/${assessmentId}/quiz/generate`, {
+      method: 'POST'
+    });
+  }
+
+  async submitAssessmentQuiz(assessmentId: string, submission: QuizSubmitRequest): Promise<QuizAttemptResult> {
+    return this.request<QuizAttemptResult>(`/assessments/${assessmentId}/quiz/submit`, {
+      method: 'POST',
+      body: JSON.stringify(submission)
+    });
+  }
+
+  async getAssessmentQuizAttempts(assessmentId: string): Promise<QuizAttemptResult[]> {
+    return this.request<QuizAttemptResult[]>(`/assessments/${assessmentId}/quiz/attempts`);
+  }
+
+  // Knowledge & Local RAG
+  async ingestKnowledge(data: { source_type: string; url?: string; title?: string; text?: string }): Promise<KnowledgeDocument> {
+    return this.request<KnowledgeDocument>('/knowledge/ingest', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async searchKnowledge(q: string, limit: number = 5): Promise<KnowledgeSearchResponse> {
+    const qs = new URLSearchParams({ q, limit: String(limit) }).toString();
+    return this.request<KnowledgeSearchResponse>(`/knowledge/search?${qs}`);
   }
 }
 

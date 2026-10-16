@@ -17,7 +17,7 @@ interface SkillRadarChartProps {
 export const SkillRadarChart: React.FC<SkillRadarChartProps> = ({ requirements }) => {
   if (!requirements || requirements.length < 3) {
     return (
-      <div className="h-64 flex items-center justify-center text-xs font-mono text-[#9A9FB1] p-4 text-center">
+      <div className="h-64 flex items-center justify-center text-xs text-slate-500 p-4 text-center">
         Skill radar requires at least 3 requirements to render topology.
       </div>
     );
@@ -42,39 +42,40 @@ export const SkillRadarChart: React.FC<SkillRadarChartProps> = ({ requirements }
     <div className="w-full h-72">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart cx="50%" cy="50%" outerRadius="75%" data={data}>
-          <PolarGrid stroke="#282B36" />
+          <PolarGrid stroke="#E2E8F0" />
           <PolarAngleAxis
             dataKey="skill"
-            tick={{ fill: '#F4F1E8', fontSize: 11, fontFamily: 'Space Grotesk' }}
+            tick={{ fill: '#1E293B', fontSize: 11, fontWeight: 500 }}
           />
           <PolarRadiusAxis
             angle={30}
             domain={[0, 100]}
-            tick={{ fill: '#6B7280', fontSize: 9 }}
-            stroke="#282B36"
+            tick={{ fill: '#64748B', fontSize: 9 }}
+            stroke="#CBD5E1"
           />
           <Radar
             name="Code Evidence"
             dataKey="repoScore"
-            stroke="#C7F36B"
-            fill="#C7F36B"
+            stroke="#2563EB"
+            fill="#3B82F6"
             fillOpacity={0.25}
           />
           <Radar
             name="Résumé Claims"
             dataKey="resumeScore"
-            stroke="#A99BFF"
-            fill="#A99BFF"
+            stroke="#6366F1"
+            fill="#818CF8"
             fillOpacity={0.2}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#1B1D24',
-              borderColor: '#323644',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              borderColor: '#E2E8F0',
               borderRadius: '0.75rem',
-              color: '#F4F1E8',
+              color: '#0F172A',
               fontSize: '12px',
-              fontFamily: 'Inter'
+              fontFamily: 'Inter',
+              boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.08)'
             }}
           />
         </RadarChart>

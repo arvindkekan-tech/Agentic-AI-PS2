@@ -21,3 +21,4 @@ class User(Base):
     resumes = relationship("Resume", back_populates="user", cascade="all, delete-orphan")
     repositories = relationship("Repository", back_populates="user", cascade="all, delete-orphan")
     assessments = relationship("Assessment", back_populates="user", cascade="all, delete-orphan")
+    quizzes = relationship("Quiz", back_populates="user", cascade="all, delete-orphan")

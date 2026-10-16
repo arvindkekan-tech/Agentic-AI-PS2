@@ -69,6 +69,21 @@ def get_current_user(
     
     user_id = payload["sub"]
     user = get_user_by_id(db, user_id)
+    if not user and "email" in payload:
+        # Check if user exists by email (e.g. registered locally or via Supabase)
+        user = get_user_by_email(db, payload["email"])
+        if not user:
+            # Auto-provision authenticated user from valid Supabase JWT
+            user = User(
+                id=user_id,
+                email=payload["email"].lower().strip(),
+                hashed_password="SUPABASE_AUTH_MANAGED",
+                full_name=payload.get("user_metadata", {}).get("full_name") or payload.get("email", "").split("@")[0]
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
