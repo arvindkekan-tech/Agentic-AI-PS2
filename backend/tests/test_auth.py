@@ -66,3 +66,17 @@ def test_get_me_authenticated(client, auth_headers, test_user):
 def test_get_me_unauthenticated_fails(client):
     res = client.get("/api/v1/auth/me")
     assert res.status_code == 401
+
+
+def test_demo_user_seeded_and_can_login(client, db_session):
+    from app.db.init_db import seed_demo_user
+    seed_demo_user(db_session)
+    res = client.post("/api/v1/auth/login", json={
+        "email": "demo@proofpath.dev",
+        "password": "ProofPath2026!"
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["user"]["email"] == "demo@proofpath.dev"
+    assert "access_token" in data
+

@@ -55,9 +55,19 @@ class ApiClient {
       let errorMessage = `HTTP error ${response.status}`;
       try {
         const errorData = await response.json();
-        errorMessage = errorData.detail || errorData.message || errorMessage;
+        if (errorData.detail && errorData.detail !== 'Not Found') {
+          errorMessage = errorData.detail;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (response.status === 404) {
+          errorMessage = `Service endpoint not found (${url}). Please verify backend is running on the configured port.`;
+        } else {
+          errorMessage = errorData.detail || errorMessage;
+        }
       } catch {
-        // Non-JSON response
+        if (response.status === 404) {
+          errorMessage = `Service endpoint not found (${url}). Please verify backend is running on the configured port.`;
+        }
       }
       throw new Error(errorMessage);
     }
