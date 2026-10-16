@@ -72,11 +72,67 @@ class AssessmentResponse(BaseModel):
     updated_at: datetime
 
 
+class IntegritySignalSchema(BaseModel):
+    signal_id: str
+    signal_type: str
+    severity: str  # "low", "medium", "high"
+    reason: str
+    observed_evidence: str
+    limitation: str
+
+
+class EvidenceCoverageSchema(BaseModel):
+    inspected_files_count: int
+    excluded_files_count: int
+    total_files_discovered: int
+    coverage_ratio: float
+    excluded_disclosures: List[str]
+    scope_limitations: str
+
+
+class CitationValiditySchema(BaseModel):
+    total_citations_count: int
+    verified_citations_count: int
+    citation_validity_ratio: float
+    all_positive_claims_cited: bool
+    citation_audit_notes: List[str]
+
+
+class AssessmentConfidenceSchema(BaseModel):
+    demonstrated_count: int
+    partial_or_needs_review_count: int
+    unassessed_or_missing_count: int
+    average_confidence: float
+    uncertainty_disclosure: str
+
+
+class RepositoryProvenanceSchema(BaseModel):
+    pinned_commit_sha: str
+    branch: str
+    repo_url: str
+    commit_timestamp: Optional[str] = None
+    commit_author: Optional[str] = None
+    provenance_verified: bool
+
+
+class TrustReportResponse(BaseModel):
+    assessment_id: str
+    evidence_coverage: EvidenceCoverageSchema
+    citation_validity: CitationValiditySchema
+    assessment_confidence: AssessmentConfidenceSchema
+    provenance: RepositoryProvenanceSchema
+    integrity_signals: List[IntegritySignalSchema]
+    internal_evidence_index: float
+    formula_explanation: str
+    disclaimer: str
+
+
 class AssessmentDetailResponse(AssessmentResponse):
     job: Optional[JobResponse] = None
     resume: Optional[ResumeResponse] = None
     repository: Optional[RepositoryResponse] = None
     requirements: List[RequirementAssessmentResponse] = []
+    trust_report: Optional[TrustReportResponse] = None
 
 
 class EvidenceResponse(BaseModel):
@@ -85,3 +141,4 @@ class EvidenceResponse(BaseModel):
     total_citations: int
     valid_citations_count: int
     citations: List[CitationResponse]
+

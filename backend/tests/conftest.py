@@ -94,3 +94,71 @@ def second_user(db_session):
 def second_auth_headers(second_user):
     token = create_access_token(second_user.id)
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def mock_repo_record(db_session, test_user):
+    import json
+    from app.models.repository import Repository
+    meta = {
+        "inspected_files": [
+            {"path": "app/main.py", "size": 300, "lines_count": 8, "language": "Python"}
+        ],
+        "excluded_files": [],
+        "coverage": {
+            "inspected_files_count": 1,
+            "excluded_files_count": 0,
+            "total_files_count": 1,
+            "inspected_lines_total": 8,
+            "languages_detected": ["Python"],
+            "limitations": ["Limited snapshot"]
+        }
+    }
+    repo = Repository(
+        user_id=test_user.id,
+        repo_url="https://github.com/proofpath-org/test-repo",
+        owner="proofpath-org",
+        name="test-repo",
+        branch="main",
+        analyzed_sha="f1234567890abcdef1234567890abcdef1234567",
+        inspected_files_count=1,
+        total_files_count=1,
+        snapshot_metadata_json=json.dumps(meta)
+    )
+    db_session.add(repo)
+    db_session.commit()
+    db_session.refresh(repo)
+    return repo
+
+
+@pytest.fixture
+def mock_snapshot_data():
+    return {
+        "owner": "proofpath-org",
+        "name": "test-repo",
+        "branch": "main",
+        "analyzed_sha": "f1234567890abcdef1234567890abcdef1234567",
+        "repo_url": "https://github.com/proofpath-org/test-repo",
+        "files": {
+            "app/main.py": {
+                "path": "app/main.py",
+                "size": 300,
+                "lines_count": 8,
+                "language": "Python",
+                "lines": [
+                    "from fastapi import FastAPI",
+                    "app = FastAPI(title='TestApp')",
+                    "",
+                    "@app.get('/items')",
+                    "def read_items():",
+                    "    return [{'id': 1, 'name': 'Item'}]",
+                    "",
+                    "# End of items endpoint"
+                ]
+            }
+        },
+        "inspected_files": [],
+        "excluded_files": [],
+        "coverage": None
+    }
+

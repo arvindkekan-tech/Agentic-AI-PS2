@@ -12,13 +12,15 @@ from app.schemas.assessment import (
     AssessmentDetailResponse,
     RequirementAssessmentResponse,
     CitationResponse,
-    EvidenceResponse
+    EvidenceResponse,
+    TrustReportResponse
 )
 from app.api.v1.endpoints.jobs import format_job_response
 from app.api.v1.endpoints.resumes import format_resume_response
 from app.api.v1.endpoints.repositories import format_repo_response
 from app.services.auth_service import get_current_user
 from app.services.assessment_service import create_and_run_assessment
+from app.services.trust_engine import generate_trust_and_evidence_report
 
 router = APIRouter(prefix="/assessments", tags=["Assessments"])
 
@@ -75,12 +77,18 @@ def format_assessment_detail(assessment: Assessment) -> AssessmentDetailResponse
     resume_res = format_resume_response(assessment.resume) if assessment.resume else None
     repo_res = format_repo_response(assessment.repository) if assessment.repository else None
 
+    try:
+        trust_report = generate_trust_and_evidence_report(assessment)
+    except Exception:
+        trust_report = None
+
     return AssessmentDetailResponse(
         **base.model_dump(),
         job=job_res,
         resume=resume_res,
         repository=repo_res,
-        requirements=req_responses
+        requirements=req_responses,
+        trust_report=trust_report
     )
 
 
@@ -156,3 +164,38 @@ def get_assessment_evidence(
         valid_citations_count=valid_count,
         citations=all_citations
     )
+
+
+@router.get("/{assessment_id}/trust-report", response_model=TrustReportResponse, summary="Get 5-dimension Evidence & Trust Integrity Report")
+def get_assessment_trust_report(
+    assessment_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get explainable 5-dimension Trust & Evidence Integrity Report:
+    Coverage, Citation Verification, Confidence/Uncertainty, Provenance, and Integrity Signals.
+    """
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id, Assessment.user_id == current_user.id).first()
+    if not assessment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assessment not found.")
+
+    return generate_trust_and_evidence_report(assessment)
+
+
+@router.get("/{assessment_id}/shared", response_model=AssessmentDetailResponse, summary="Inspect explicitly shared assessment for recruiters or mentors")
+def get_shared_assessment(
+    assessment_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Recruiter or mentor read-only endpoint.
+    Permits inspection of requirement-level code evidence, citations, and limitations,
+    without exposing candidate's personal authentication credentials, tokens, or other private records.
+    """
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
+    if not assessment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shared assessment not found or link has expired.")
+
+    return format_assessment_detail(assessment)
+
