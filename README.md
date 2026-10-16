@@ -131,15 +131,21 @@ kurukshetra-2026/
 | `GET` | `/api/v1/assessments` | List all historical assessments for current user | Yes |
 | `GET` | `/api/v1/assessments/{id}` | Retrieve comprehensive assessment findings & citations | Yes |
 | `GET` | `/api/v1/assessments/{id}/evidence` | Retrieve citation verification report and snapshot SHA | Yes |
+| `GET` | `/api/v1/monitoring/status/{repo_id}` | Get repository polling status and latest commit event | Yes |
+| `POST` | `/api/v1/monitoring/check-now/{repo_id}` | Trigger immediate check for new repository commits | Yes |
+| `GET` | `/api/v1/monitoring/events` | List change detection events and before/after diffs | Yes |
+| `GET` | `/api/v1/monitoring/events/{id}` | Get detailed commit change event with impact table | Yes |
+| `PATCH` | `/api/v1/monitoring/repositories/{id}` | Configure polling interval or toggle monitoring | Yes |
+| `POST` | `/api/v1/monitoring/webhook/github` | Webhook receiver for GitHub push events (HMAC SHA-256) | Optional Secret |
 
 ---
 
 ## 5. Automated Testing & Verification
 
 ### Running Backend Tests
-Execute pytest across the 24 automated unit and integration tests:
+Execute pytest across the 33 automated unit and integration tests:
 ```bash
-.\.venv\Scripts\pytest backend\tests -v
+backend\.venv\Scripts\pytest backend\tests -v
 ```
 **Test Coverage Includes:**
 * User registration, password hashing (Argon2), login, and session validation.
@@ -150,11 +156,14 @@ Execute pytest across the 24 automated unit and integration tests:
 * Deterministic citation validator (SHA verification, line bounds, exact excerpt match).
 * Status downgrade rule enforcement (downgrading 'demonstrated' if valid citations are absent).
 * End-to-end assessment execution, persistence, and preservation of prior results on error.
+* Server-side commit watcher deduplication and head SHA polling.
+* Automatic reassessment against new commit snapshots with before/after diff calculation.
+* Preservation of previous assessments when GitHub API or LLM operations encounter errors.
+* Monitoring REST endpoints and signed GitHub webhook verification.
 
 ### Running Frontend Typechecks & Build
 ```bash
-cd frontend
-npm run build
+npm run build --prefix frontend
 ```
 Executes `tsc -b` and Vite production bundling to guarantee type safety and clean asset generation.
 
@@ -173,13 +182,10 @@ ProofPath includes a modular provider adapter:
 
 ---
 
-## 7. Known Phase 1 Limitations & Phase 2 Roadmap
+## 7. Evidence Change Ledger & Automatic Watcher
 
-* **Phase 1 Scope:**
-  * Focuses on public GitHub repositories.
-  * Snapshot bounded to top 30 source files (<50KB each) to prevent rate exhaustion.
-  * Static code analysis with deterministic citation verification.
-* **Phase 2 Roadmap:**
-  * Evidence Change Ledger tracking competency diffs across git commits over time.
-  * GitHub App integration with Webhooks for automated commit-triggered reassessment.
-  * Safe sandboxed test execution for verifying test passage claims.
+ProofPath Phase 1 includes automatic repository change detection:
+* **Server-Side Watcher:** A background worker runs in the FastAPI lifespan, polling the branch head SHA at configurable intervals (`WATCHER_POLL_INTERVAL_SECONDS=30`).
+* **Deduplication:** Repeated checks for identical SHAs produce zero redundant computations.
+* **Non-Destructive Reassessment:** When a new commit is detected, ProofPath creates a fresh assessment record while preserving all previous audits.
+* **Evidence Change Ledger (ECL):** Displays commit history, modified files (+/- diffs), and a before/after impact comparison showing which skill requirements improved, regressed, or remained unchanged.
