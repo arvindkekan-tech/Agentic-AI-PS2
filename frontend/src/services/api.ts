@@ -5,8 +5,11 @@ import type {
   Resume,
   Repository,
   Assessment,
-  EvidenceReport
+  EvidenceReport,
+  ChangeEvent,
+  MonitoringStatusResponse
 } from '../types';
+
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
 
@@ -167,6 +170,37 @@ class ApiClient {
   async getAssessmentEvidence(id: string): Promise<EvidenceReport> {
     return this.request<EvidenceReport>(`/assessments/${id}/evidence`);
   }
+
+  // Monitoring & Change Detection
+  async getMonitoringStatus(repositoryId: string): Promise<MonitoringStatusResponse> {
+    return this.request<MonitoringStatusResponse>(`/monitoring/status/${repositoryId}`);
+  }
+
+  async checkMonitoringNow(repositoryId: string, force: boolean = false): Promise<ChangeEvent | null> {
+    return this.request<ChangeEvent | null>(`/monitoring/check-now/${repositoryId}?force=${force}`, {
+      method: 'POST'
+    });
+  }
+
+  async listChangeEvents(repositoryId?: string, limit: number = 20): Promise<ChangeEvent[]> {
+    const query = repositoryId ? `?repository_id=${repositoryId}&limit=${limit}` : `?limit=${limit}`;
+    return this.request<ChangeEvent[]>(`/monitoring/events${query}`);
+  }
+
+  async getChangeEvent(eventId: string): Promise<ChangeEvent> {
+    return this.request<ChangeEvent>(`/monitoring/events/${eventId}`);
+  }
+
+  async updateMonitoringSettings(
+    repositoryId: string,
+    data: { monitoring_enabled?: boolean; monitoring_interval_seconds?: number }
+  ): Promise<MonitoringStatusResponse> {
+    return this.request<MonitoringStatusResponse>(`/monitoring/repositories/${repositoryId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  }
 }
+
 
 export const api = new ApiClient();

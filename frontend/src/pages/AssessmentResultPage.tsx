@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ShieldCheck,
   Briefcase,
@@ -10,19 +10,24 @@ import {
   Sparkles,
   Info,
   Lightbulb,
-  Loader2
+  Loader2,
+  Activity
 } from 'lucide-react';
 import { api } from '../services/api';
 import type { Assessment } from '../types';
 import { StatusBadge } from '../components/StatusBadge';
 import { CodeCitationCard } from '../components/CodeCitationCard';
 import { CoverageModal } from '../components/CoverageModal';
+import { EvidenceChangeLedger } from '../components/EvidenceChangeLedger';
 
 export const AssessmentResultPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'requirements' | 'ledger'>('requirements');
+
 
   // Filter tab: 'all' | 'demonstrated' | 'partial_or_needs_review' | 'not_demonstrated_in_analyzed_scope'
   const [filter, setFilter] = useState<string>('all');
@@ -192,57 +197,100 @@ export const AssessmentResultPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-[#E2DDD3] pb-3">
+        {/* Primary View Switcher */}
+        <div className="flex items-center gap-3 border-b border-[#E2DDD3] pb-2">
           <button
-            onClick={() => setFilter('all')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-colors ${
-              filter === 'all'
-                ? 'bg-[#111318] text-[#C7F36B] font-bold'
+            onClick={() => setActiveTab('requirements')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-headline font-bold transition-all cursor-pointer ${
+              activeTab === 'requirements'
+                ? 'bg-[#111318] text-[#C7F36B] shadow-sm'
                 : 'bg-[#FFFEFA] text-[#50566A] hover:bg-[#EFECE3]'
             }`}
           >
-            All Requirements ({requirements.length})
+            <ShieldCheck className="w-4 h-4" />
+            <span>Skill Requirements & Citations ({requirements.length})</span>
           </button>
 
-          <button
-            onClick={() => setFilter('demonstrated')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-colors ${
-              filter === 'demonstrated'
-                ? 'bg-[#111318] text-[#C7F36B] font-bold'
-                : 'bg-[#FFFEFA] text-[#50566A] hover:bg-[#EFECE3]'
-            }`}
-          >
-            Demonstrated ({summary_counts.demonstrated || 0})
-          </button>
-
-          <button
-            onClick={() => setFilter('partial_or_needs_review')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-colors ${
-              filter === 'partial_or_needs_review'
-                ? 'bg-[#111318] text-[#F3B66D] font-bold'
-                : 'bg-[#FFFEFA] text-[#50566A] hover:bg-[#EFECE3]'
-            }`}
-          >
-            Needs Review ({summary_counts.partial_or_needs_review || 0})
-          </button>
-
-          <button
-            onClick={() => setFilter('not_demonstrated_in_analyzed_scope')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-colors ${
-              filter === 'not_demonstrated_in_analyzed_scope'
-                ? 'bg-[#111318] text-white font-bold'
-                : 'bg-[#FFFEFA] text-[#50566A] hover:bg-[#EFECE3]'
-            }`}
-          >
-            Not in Scope ({summary_counts.not_demonstrated_in_analyzed_scope || 0})
-          </button>
+          {repository && (
+            <button
+              onClick={() => setActiveTab('ledger')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-headline font-bold transition-all cursor-pointer ${
+                activeTab === 'ledger'
+                  ? 'bg-[#111318] text-[#C7F36B] shadow-sm'
+                  : 'bg-[#FFFEFA] text-[#50566A] hover:bg-[#EFECE3]'
+              }`}
+            >
+              <Activity className="w-4 h-4 text-indigo-400" />
+              <span>Evidence Change Ledger</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+            </button>
+          )}
         </div>
 
-        {/* Requirement-by-Requirement Cards */}
-        <div className="space-y-6">
-          {filteredRequirements.map((req) => (
-            <div
+        {activeTab === 'ledger' && repository ? (
+          <div className="pt-2">
+            <EvidenceChangeLedger
+              repositoryId={repository.id}
+              onSelectAssessment={(newAssessId) => {
+                navigate(`/assessments/${newAssessId}`);
+                loadAssessment(newAssessId);
+              }}
+            />
+          </div>
+        ) : (
+          <>
+            {/* Filter Tabs */}
+            <div className="flex flex-wrap items-center gap-2 border-b border-[#E2DDD3] pb-3">
+              <button
+                onClick={() => setFilter('all')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-colors ${
+                  filter === 'all'
+                    ? 'bg-[#111318] text-[#C7F36B] font-bold'
+                    : 'bg-[#FFFEFA] text-[#50566A] hover:bg-[#EFECE3]'
+                }`}
+              >
+                All Requirements ({requirements.length})
+              </button>
+
+              <button
+                onClick={() => setFilter('demonstrated')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-colors ${
+                  filter === 'demonstrated'
+                    ? 'bg-[#111318] text-[#C7F36B] font-bold'
+                    : 'bg-[#FFFEFA] text-[#50566A] hover:bg-[#EFECE3]'
+                }`}
+              >
+                Demonstrated ({summary_counts.demonstrated || 0})
+              </button>
+
+              <button
+                onClick={() => setFilter('partial_or_needs_review')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-colors ${
+                  filter === 'partial_or_needs_review'
+                    ? 'bg-[#111318] text-[#F3B66D] font-bold'
+                    : 'bg-[#FFFEFA] text-[#50566A] hover:bg-[#EFECE3]'
+                }`}
+              >
+                Needs Review ({summary_counts.partial_or_needs_review || 0})
+              </button>
+
+              <button
+                onClick={() => setFilter('not_demonstrated_in_analyzed_scope')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-mono transition-colors ${
+                  filter === 'not_demonstrated_in_analyzed_scope'
+                    ? 'bg-[#111318] text-white font-bold'
+                    : 'bg-[#FFFEFA] text-[#50566A] hover:bg-[#EFECE3]'
+                }`}
+              >
+                Not in Scope ({summary_counts.not_demonstrated_in_analyzed_scope || 0})
+              </button>
+            </div>
+
+            {/* Requirement-by-Requirement Cards */}
+            <div className="space-y-6">
+              {filteredRequirements.map((req) => (
+                <div
+
               key={req.id}
               className="bg-[#FFFEFA] rounded-2xl border border-[#E2DDD3] p-6 shadow-sm space-y-6"
             >
@@ -371,7 +419,10 @@ export const AssessmentResultPage: React.FC = () => {
             </div>
           ))}
         </div>
+        </>
+        )}
       </div>
+
 
       {/* Coverage & Trust Audit Modal */}
       {repository && (

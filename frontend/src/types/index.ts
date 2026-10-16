@@ -164,3 +164,55 @@ export interface EvidenceReport {
   valid_citations_count: number;
   citations: Citation[];
 }
+
+export interface ChangedFileItem {
+  filename: string;
+  status: string;
+  additions: number;
+  deletions: number;
+}
+
+export interface RequirementDiffItem {
+  requirement_id: string;
+  skill: string;
+  previous_status: AssessmentStatus;
+  current_status: AssessmentStatus;
+  status_delta: 'improved' | 'regressed' | 'unchanged';
+  previous_citations_count: number;
+  current_citations_count: number;
+  citations_diff_summary?: string;
+}
+
+export interface ChangeEvent {
+  id: string;
+  repository_id: string;
+  assessment_id?: string;
+  previous_assessment_id?: string;
+  branch: string;
+  commit_sha: string;
+  parent_sha?: string;
+  commit_message?: string;
+  commit_author?: string;
+  commit_url?: string;
+  changed_files: ChangedFileItem[];
+  status: 'detected' | 'running' | 'completed' | 'failed';
+  summary?: string;
+  error_message?: string;
+  before_after_diff: RequirementDiffItem[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MonitoringStatusResponse {
+  repository_id: string;
+  repo_url: string;
+  branch: string;
+  analyzed_sha: string;
+  last_observed_head_sha?: string;
+  last_checked_at?: string;
+  monitoring_enabled: boolean;
+  monitoring_interval_seconds: number;
+  latest_event?: ChangeEvent;
+  events_count: number;
+}
+
