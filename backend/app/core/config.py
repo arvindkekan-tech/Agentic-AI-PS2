@@ -25,12 +25,16 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-2.5-flash"
     
-    # GitHub Integration
+    # GitHub Integration & Watcher
     GITHUB_TOKEN: str = ""
+    GITHUB_WEBHOOK_SECRET: str = ""
+    WATCHER_ENABLED: bool = True
+    WATCHER_POLL_INTERVAL_SECONDS: int = 30
     
     # SSRF & Networking Limits
     SSRF_TIMEOUT_SECONDS: int = 10
     SSRF_MAX_RESPONSE_BYTES: int = 2 * 1024 * 1024  # 2MB
+
     
     # CORS
     CORS_ORIGINS: List[str] = [

@@ -297,3 +297,119 @@ def fetch_repository_snapshot(repo_url: str, branch_name: Optional[str] = None) 
             "excluded_files": excluded_files_meta,
             "coverage": coverage
         }
+
+
+def get_branch_head_sha(repo_url: str, branch_name: Optional[str] = None) -> Tuple[str, str]:
+    """
+    Get the latest head commit SHA for a repository branch.
+    Returns (branch, sha).
+    """
+    owner, repo_name = parse_github_url(repo_url)
+    with get_github_client() as client:
+        target_branch = branch_name
+        if not target_branch:
+            try:
+                repo_res = client.get(f"/repos/{owner}/{repo_name}")
+                if repo_res.status_code == 200:
+                    target_branch = repo_res.json().get("default_branch") or "main"
+                else:
+                    target_branch = "main"
+            except Exception:
+                target_branch = "main"
+
+        try:
+            branch_res = client.get(f"/repos/{owner}/{repo_name}/branches/{target_branch}")
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Network error contacting GitHub API: {str(e)}"
+            )
+
+        if branch_res.status_code == 200:
+            branch_data = branch_res.json()
+            return target_branch, branch_data["commit"]["sha"]
+        elif branch_res.status_code == 404:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Branch '{target_branch}' not found in repository '{owner}/{repo_name}'."
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to fetch branch head: HTTP {branch_res.status_code}"
+            )
+
+
+def get_commit_details_or_compare(
+    repo_url: str,
+    branch: str,
+    head_sha: str,
+    base_sha: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Fetch commit information and changed files between base_sha and head_sha.
+    If base_sha is not provided or compare fails, falls back to inspecting head_sha single commit.
+    """
+    owner, repo_name = parse_github_url(repo_url)
+    changed_files: List[Dict[str, Any]] = []
+    commit_msg = None
+    commit_author = None
+    commit_url = f"https://github.com/{owner}/{repo_name}/commit/{head_sha}"
+
+    with get_github_client() as client:
+        compared = False
+        if base_sha and base_sha != head_sha:
+            try:
+                comp_res = client.get(f"/repos/{owner}/{repo_name}/compare/{base_sha}...{head_sha}")
+                if comp_res.status_code == 200:
+                    comp_data = comp_res.json()
+                    for f in comp_data.get("files", []):
+                        changed_files.append({
+                            "filename": f.get("filename", ""),
+                            "status": f.get("status", "modified"),
+                            "additions": f.get("additions", 0),
+                            "deletions": f.get("deletions", 0)
+                        })
+                    commits = comp_data.get("commits", [])
+                    if commits:
+                        latest_commit = commits[-1]
+                        commit_msg = latest_commit.get("commit", {}).get("message", "")
+                        commit_author = (
+                            latest_commit.get("commit", {}).get("author", {}).get("name")
+                            or latest_commit.get("author", {}).get("login")
+                        )
+                        commit_url = latest_commit.get("html_url") or commit_url
+                    compared = True
+            except Exception:
+                pass
+
+        if not compared:
+            try:
+                c_res = client.get(f"/repos/{owner}/{repo_name}/commits/{head_sha}")
+                if c_res.status_code == 200:
+                    c_data = c_res.json()
+                    commit_msg = c_data.get("commit", {}).get("message", "")
+                    commit_author = (
+                        c_data.get("commit", {}).get("author", {}).get("name")
+                        or c_data.get("author", {}).get("login")
+                    )
+                    commit_url = c_data.get("html_url") or commit_url
+                    for f in c_data.get("files", []):
+                        changed_files.append({
+                            "filename": f.get("filename", ""),
+                            "status": f.get("status", "modified"),
+                            "additions": f.get("additions", 0),
+                            "deletions": f.get("deletions", 0)
+                        })
+            except Exception:
+                pass
+
+    return {
+        "commit_sha": head_sha,
+        "parent_sha": base_sha,
+        "commit_message": commit_msg or f"Commit {head_sha[:7]}",
+        "commit_author": commit_author or "GitHub Author",
+        "commit_url": commit_url,
+        "changed_files": changed_files
+    }
+

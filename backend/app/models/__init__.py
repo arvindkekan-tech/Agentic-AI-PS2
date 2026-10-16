@@ -5,6 +5,7 @@ from app.models.repository import Repository
 from app.models.assessment import Assessment
 from app.models.requirement import RequirementAssessment
 from app.models.citation import Citation
+from app.models.change_event import ChangeEvent
 
 __all__ = [
     "User",
@@ -13,5 +14,7 @@ __all__ = [
     "Repository",
     "Assessment",
     "RequirementAssessment",
-    "Citation"
+    "Citation",
+    "ChangeEvent"
 ]
+

@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.db.init_db import init_db
+from app.services.watcher_service import start_watcher, stop_watcher
 from app.api.v1.api import api_router
 
 
@@ -12,7 +13,12 @@ from app.api.v1.api import api_router
 async def lifespan(app: FastAPI):
     # Initialize database tables on startup
     init_db()
+    # Start server-side repository change watcher
+    start_watcher()
     yield
+    # Clean shutdown of watcher
+    stop_watcher()
+
 
 
 app = FastAPI(

@@ -45,3 +45,8 @@ class RepositoryResponse(BaseModel):
     excluded_files: List[ExcludedFileItem]
     coverage: SnapshotCoverage
     created_at: datetime
+    last_checked_at: Optional[datetime] = None
+    last_observed_head_sha: Optional[str] = None
+    monitoring_enabled: bool = True
+    monitoring_interval_seconds: int = 30
+
