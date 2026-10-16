@@ -17,8 +17,8 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#111318] flex items-center justify-center text-white">
-        <Loader2 className="w-8 h-8 animate-spin text-[#C7F36B]" />
+      <div className="min-h-screen bg-[#090D12] flex items-center justify-center text-white">
+        <Loader2 className="w-8 h-8 animate-spin text-[#D6FF63]" />
       </div>
     );
   }
@@ -34,7 +34,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="min-h-screen flex flex-col bg-[#111318]">
+        <div className="min-h-screen flex flex-col bg-[#090D12]">
           <Navbar />
           <main className="flex-1">
             <Routes>

@@ -18,9 +18,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       case 'demonstrated':
         return {
           label: 'Demonstrated',
-          bg: 'bg-[#C7F36B]/15',
-          border: 'border-[#C7F36B]/30',
-          text: 'text-[#C7F36B]',
+          bg: 'bg-[#D6FF63]/15',
+          border: 'border-[#D6FF63]/30',
+          text: 'text-[#D6FF63]',
           icon: CheckCircle2
         };
       case 'partial_or_needs_review':
@@ -34,9 +34,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       case 'not_demonstrated_in_analyzed_scope':
         return {
           label: 'Not in Scope',
-          bg: 'bg-[#282B36]',
-          border: 'border-[#3B4050]',
-          text: 'text-[#9A9FB1]',
+          bg: 'bg-[#171D25]',
+          border: 'border-[#29313B]',
+          text: 'text-[#A9B0BC]',
           icon: MinusCircle
         };
       case 'unable_to_assess':

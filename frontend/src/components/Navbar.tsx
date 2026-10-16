@@ -16,22 +16,22 @@ export const Navbar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[#282B36] bg-[#111318]/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full border-b border-[#29313B] bg-[#090D12]/85 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand */}
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-lg bg-[#C7F36B] flex items-center justify-center text-[#111318] shadow-sm group-hover:scale-105 transition-transform">
+          <div className="w-9 h-9 rounded-xl bg-[#D6FF63] flex items-center justify-center text-[#090D12] shadow-[0_0_20px_rgba(214,255,99,0.3)] group-hover:scale-105 transition-all">
             <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
           </div>
           <div>
-            <div className="font-headline font-bold text-base tracking-tight text-white flex items-center gap-1.5">
+            <div className="font-headline font-bold text-base tracking-tight text-[#F4F5F2] flex items-center gap-1.5">
               ProofPath
-              <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-[#282B36] text-[#C7F36B] tracking-wider border border-[#3B4050]">
-                Phase 2
+              <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-[#171D25] text-[#D6FF63] tracking-wider border border-[#29313B]">
+                AI Sentinel
               </span>
             </div>
-            <div className="text-[10px] text-[#9A9FB1] font-mono tracking-tight -mt-0.5">
-              Career Intelligence & Verified Evidence
+            <div className="text-[10px] text-[#A9B0BC] font-mono tracking-tight -mt-0.5">
+              Evidence Intelligence Platform
             </div>
           </div>
         </Link>
@@ -43,11 +43,11 @@ export const Navbar: React.FC = () => {
               to="/dashboard"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 isActive('/dashboard')
-                  ? 'bg-[#1B1D24] text-white border border-[#282B36]'
-                  : 'text-[#9A9FB1] hover:text-white hover:bg-[#1B1D24]/60'
+                  ? 'bg-[#171D25] text-white border border-[#29313B]'
+                  : 'text-[#A9B0BC] hover:text-white hover:bg-[#171D25]/60'
               }`}
             >
-              <LayoutDashboard className="w-3.5 h-3.5 text-[#C7F36B]" />
+              <LayoutDashboard className="w-3.5 h-3.5 text-[#D6FF63]" />
               <span className="hidden sm:inline">Workspace</span>
             </Link>
 
@@ -55,20 +55,20 @@ export const Navbar: React.FC = () => {
               to="/jobs/discover"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 isActive('/jobs/discover')
-                  ? 'bg-[#1B1D24] text-[#C7F36B] border border-[#282B36]'
-                  : 'text-[#9A9FB1] hover:text-white hover:bg-[#1B1D24]/60'
+                  ? 'bg-[#171D25] text-[#D6FF63] border border-[#29313B]'
+                  : 'text-[#A9B0BC] hover:text-white hover:bg-[#171D25]/60'
               }`}
             >
-              <Compass className="w-3.5 h-3.5 text-[#C7F36B]" />
+              <Compass className="w-3.5 h-3.5 text-[#D6FF63]" />
               <span className="hidden sm:inline">Discover Jobs</span>
             </Link>
 
             <Link
               to="/wizard"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 isActive('/wizard')
-                  ? 'bg-[#C7F36B] text-[#111318]'
-                  : 'bg-[#C7F36B]/15 text-[#C7F36B] hover:bg-[#C7F36B]/25 border border-[#C7F36B]/30'
+                  ? 'bg-[#D6FF63] text-[#090D12] shadow-[0_0_15px_rgba(214,255,99,0.25)]'
+                  : 'bg-[#D6FF63]/15 text-[#D6FF63] hover:bg-[#D6FF63]/25 border border-[#D6FF63]/30'
               }`}
             >
               <PlusCircle className="w-3.5 h-3.5" />
@@ -79,26 +79,26 @@ export const Navbar: React.FC = () => {
               to="/history"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 isActive('/history')
-                  ? 'bg-[#1B1D24] text-white border border-[#282B36]'
-                  : 'text-[#9A9FB1] hover:text-white hover:bg-[#1B1D24]/60'
+                  ? 'bg-[#171D25] text-white border border-[#29313B]'
+                  : 'text-[#A9B0BC] hover:text-white hover:bg-[#171D25]/60'
               }`}
             >
               <History className="w-3.5 h-3.5 text-[#A99BFF]" />
               <span className="hidden sm:inline">History</span>
             </Link>
 
-            <div className="h-4 w-px bg-[#282B36] mx-2" />
+            <div className="h-4 w-px bg-[#29313B] mx-2" />
 
             {/* User profile & logout */}
             <div className="flex items-center gap-2">
-              <span className="hidden md:inline-flex items-center gap-1.5 text-xs text-[#9A9FB1] font-mono px-2 py-1 rounded bg-[#1B1D24] border border-[#282B36]">
-                <UserIcon className="w-3 h-3 text-[#C7F36B]" />
+              <span className="hidden md:inline-flex items-center gap-1.5 text-xs text-[#A9B0BC] font-mono px-2.5 py-1 rounded-lg bg-[#171D25] border border-[#29313B]">
+                <UserIcon className="w-3 h-3 text-[#D6FF63]" />
                 <span className="truncate max-w-[120px]">{user.email}</span>
               </span>
 
               <button
                 onClick={handleLogout}
-                className="p-1.5 text-[#9A9FB1] hover:text-white hover:bg-[#282B36] rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-[#A9B0BC] hover:text-white hover:bg-[#171D25] rounded-lg border border-transparent hover:border-[#29313B] transition-colors cursor-pointer"
                 title="Log out"
               >
                 <LogOut className="w-4 h-4" />
@@ -109,13 +109,13 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center gap-3">
             <Link
               to="/login"
-              className="text-xs font-medium text-[#9A9FB1] hover:text-white transition-colors px-3 py-1.5"
+              className="text-xs font-medium text-[#A9B0BC] hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-[#171D25]"
             >
               Sign In
             </Link>
             <Link
               to="/register"
-              className="text-xs font-semibold px-3.5 py-1.5 rounded-lg bg-[#C7F36B] text-[#111318] hover:bg-[#b8e458] transition-colors shadow-sm"
+              className="text-xs font-semibold px-4 py-2 rounded-xl bg-[#D6FF63] text-[#090D12] hover:bg-[#c2ec4b] transition-all shadow-[0_0_15px_rgba(214,255,99,0.2)] hover:shadow-[0_0_20px_rgba(214,255,99,0.35)]"
             >
               Create Account
             </Link>
