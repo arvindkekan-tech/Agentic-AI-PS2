@@ -64,6 +64,40 @@ def test_import_job_pasted_text_success(client, auth_headers):
     skills = [r["normalized_skill"] for r in reqs]
     assert any("React" in s or "TypeScript" in s for s in skills)
     assert any("Python" in s or "FastAPI" in s for s in skills)
+    # Check enhanced grounding metadata
+    for r in reqs:
+        assert r["source_excerpt"] is not None
+        assert r["extraction_method"] == "pasted_nlp"
+        assert r["requirement_type"] in ["technical_skill", "framework", "testing", "architecture", "database", "devops_infrastructure"]
+
+
+def test_update_job_requirements(client, auth_headers):
+    # Import job
+    res = client.post("/api/v1/jobs/import", headers=auth_headers, json={
+        "source_type": "pasted",
+        "title": "Original Title",
+        "text": "We need a Python and FastAPI backend developer with React and PostgreSQL and pytest."
+    })
+    assert res.status_code == 201
+    job_data = res.json()
+    job_id = job_data["id"]
+    reqs = job_data["extracted_requirements"]
+
+    # Candidate modifies requirement priorities and customizes wording
+    reqs[0]["priority_type"] = "preferred"
+    reqs[0]["original_wording"] = "Customized requirement by student"
+
+    update_res = client.put(f"/api/v1/jobs/{job_id}/requirements", headers=auth_headers, json={
+        "title": "Updated Title",
+        "company": "Target Unicorn",
+        "extracted_requirements": reqs
+    })
+    assert update_res.status_code == 200
+    updated_data = update_res.json()
+    assert updated_data["title"] == "Updated Title"
+    assert updated_data["company"] == "Target Unicorn"
+    assert updated_data["extracted_requirements"][0]["priority_type"] == "preferred"
+    assert updated_data["extracted_requirements"][0]["original_wording"] == "Customized requirement by student"
 
 
 def test_import_job_too_short_fails(client, auth_headers):

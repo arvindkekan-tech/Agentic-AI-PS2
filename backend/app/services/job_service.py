@@ -153,11 +153,35 @@ def fetch_job_url_safely(url: str) -> Tuple[str, Optional[str]]:
 
     # Parse HTML with BeautifulSoup
     soup = BeautifulSoup(content, "html.parser")
+
+    # Extract JSON-LD JobPosting metadata if available
+    json_ld_data = None
+    company_name = None
+    json_ld_title = None
+    for script_tag in soup.find_all("script", type=lambda t: t and "ld+json" in t.lower()):
+        try:
+            raw_json = json.loads(script_tag.string or "{}")
+            items = raw_json if isinstance(raw_json, list) else (raw_json.get("@graph", [raw_json]) if isinstance(raw_json, dict) else [])
+            for item in items:
+                if isinstance(item, dict) and item.get("@type") == "JobPosting":
+                    json_ld_data = item
+                    json_ld_title = item.get("title")
+                    hiring_org = item.get("hiringOrganization")
+                    if isinstance(hiring_org, dict):
+                        company_name = hiring_org.get("name")
+                    elif isinstance(hiring_org, str):
+                        company_name = hiring_org
+                    break
+            if json_ld_data:
+                break
+        except Exception:
+            continue
+
     for script_or_style in soup(["script", "style", "nav", "header", "footer", "aside"]):
         script_or_style.decompose()
 
-    page_title = None
-    if soup.title and soup.title.string:
+    page_title = json_ld_title
+    if not page_title and soup.title and soup.title.string:
         page_title = soup.title.string.strip()
 
     text = soup.get_text(separator="\n")
@@ -171,19 +195,43 @@ def fetch_job_url_safely(url: str) -> Tuple[str, Optional[str]]:
             detail="The target URL did not return sufficient job description text. Please paste the job description directly."
         )
 
-    return cleaned_text, page_title
+    return cleaned_text, page_title, company_name, json_ld_data
 
 
-def extract_grounded_requirements(job_text: str) -> List[ExtractedRequirementItem]:
+
+def classify_requirement_type(skill_name: str) -> str:
+    """Classify requirement type into standardized category."""
+    lower = skill_name.lower()
+    if any(k in lower for k in ["test", "pytest", "jest", "unit test", "tdd"]):
+        return "testing"
+    elif any(k in lower for k in ["sql", "postgres", "sqlite", "mysql", "database"]):
+        return "database"
+    elif any(k in lower for k in ["api", "rest", "architecture", "system design"]):
+        return "architecture"
+    elif any(k in lower for k in ["docker", "k8s", "kubernetes", "cloud", "aws", "gcp", "azure", "ci/cd"]):
+        return "devops_infrastructure"
+    elif any(k in lower for k in ["react", "fastapi", "vue", "django", "spring"]):
+        return "framework"
+    return "technical_skill"
+
+
+def extract_grounded_requirements(
+    job_text: str,
+    source_type: str = "pasted",
+    json_ld_data: Optional[dict] = None
+) -> List[ExtractedRequirementItem]:
     """
     Extract 4-6 grounded requirements from job text.
-    Preserves original wording, extracts normalized skill, and detects priority.
+    Preserves original wording, extracts normalized skill, detects priority,
+    and attaches source excerpt and extraction method.
     """
     if not job_text or len(job_text.strip()) < 30:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Job text is too brief to extract requirements. Please provide a complete job posting."
         )
+
+    method = "json_ld" if json_ld_data else ("html_nlp" if source_type == "url" else "pasted_nlp")
 
     # Common technical skills and domain keywords for grounding
     skill_patterns = [
@@ -209,7 +257,7 @@ def extract_grounded_requirements(job_text: str) -> List[ExtractedRequirementIte
     found_skills = set()
     req_index = 1
 
-    # First pass: look for bullet points or lines containing skill keywords
+    # First pass: look for lines containing skill keywords
     for line in lines:
         if len(line) < 15 or len(line) > 300:
             continue
@@ -221,7 +269,6 @@ def extract_grounded_requirements(job_text: str) -> List[ExtractedRequirementIte
 
             for pat in patterns:
                 if re.search(pat, lower_line):
-                    # Check priority
                     is_preferred = bool(re.search(r"\b(prefer|plus|bonus|nice\s*to\s*have|optional|advantage)\b", lower_line))
                     priority = "preferred" if is_preferred else "required"
                     
@@ -230,7 +277,10 @@ def extract_grounded_requirements(job_text: str) -> List[ExtractedRequirementIte
                             id=f"REQ-{req_index}",
                             original_wording=line,
                             normalized_skill=normalized_skill,
-                            priority_type=priority
+                            priority_type=priority,
+                            source_excerpt=line[:200],
+                            extraction_method=method,
+                            requirement_type=classify_requirement_type(normalized_skill)
                         )
                     )
                     found_skills.add(normalized_skill)
@@ -251,7 +301,6 @@ def extract_grounded_requirements(job_text: str) -> List[ExtractedRequirementIte
                 continue
             lower_line = line.lower()
             if any(term in lower_line for term in ["experience", "ability to", "knowledge of", "understanding", "proficient", "responsible for"]):
-                # Ensure this line isn't already used
                 if not any(item.original_wording == line for item in extracted):
                     skill_name = line[:40].strip()
                     if ":" in skill_name:
@@ -261,7 +310,10 @@ def extract_grounded_requirements(job_text: str) -> List[ExtractedRequirementIte
                             id=f"REQ-{req_index}",
                             original_wording=line,
                             normalized_skill=skill_name or f"Technical Competency {req_index}",
-                            priority_type="required"
+                            priority_type="required",
+                            source_excerpt=line[:200],
+                            extraction_method=method,
+                            requirement_type=classify_requirement_type(skill_name)
                         )
                     )
                     req_index += 1
@@ -275,3 +327,4 @@ def extract_grounded_requirements(job_text: str) -> List[ExtractedRequirementIte
 
     # Return top 4 to 6 items
     return extracted[:6]
+
