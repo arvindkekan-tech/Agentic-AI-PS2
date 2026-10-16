@@ -11,7 +11,9 @@ import {
   Info,
   Lightbulb,
   Loader2,
-  Activity
+  Activity,
+  Check,
+  Share2
 } from 'lucide-react';
 import { api } from '../services/api';
 import type { Assessment } from '../types';
@@ -19,6 +21,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { CodeCitationCard } from '../components/CodeCitationCard';
 import { CoverageModal } from '../components/CoverageModal';
 import { EvidenceChangeLedger } from '../components/EvidenceChangeLedger';
+import { TrustReportCard } from '../components/TrustReportCard';
 
 export const AssessmentResultPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,8 +29,8 @@ export const AssessmentResultPage: React.FC = () => {
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'requirements' | 'ledger'>('requirements');
-
+  const [activeTab, setActiveTab] = useState<'requirements' | 'trust' | 'ledger'>('requirements');
+  const [copied, setCopied] = useState(false);
 
   // Filter tab: 'all' | 'demonstrated' | 'partial_or_needs_review' | 'not_demonstrated_in_analyzed_scope'
   const [filter, setFilter] = useState<string>('all');
@@ -106,6 +109,20 @@ export const AssessmentResultPage: React.FC = () => {
           </Link>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const shareUrl = `${window.location.origin}/shared/assessments/${assessment.id}`;
+                navigator.clipboard.writeText(shareUrl);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#111318] text-white hover:text-[#C7F36B] text-xs font-mono border border-[#282B36] transition-colors shadow-sm"
+              title="Copy public read-only link for recruiters"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-[#C7F36B]" /> : <Share2 className="w-3.5 h-3.5" />}
+              <span>{copied ? 'Share Link Copied!' : 'Share with Recruiter'}</span>
+            </button>
+
             {repository && (
               <button
                 onClick={() => setCoverageModalOpen(true)}
@@ -198,7 +215,7 @@ export const AssessmentResultPage: React.FC = () => {
         </div>
 
         {/* Primary View Switcher */}
-        <div className="flex items-center gap-3 border-b border-[#E2DDD3] pb-2">
+        <div className="flex flex-wrap items-center gap-3 border-b border-[#E2DDD3] pb-2">
           <button
             onClick={() => setActiveTab('requirements')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-headline font-bold transition-all cursor-pointer ${
@@ -210,6 +227,23 @@ export const AssessmentResultPage: React.FC = () => {
             <ShieldCheck className="w-4 h-4" />
             <span>Skill Requirements & Citations ({requirements.length})</span>
           </button>
+
+          {assessment.trust_report && (
+            <button
+              onClick={() => setActiveTab('trust')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-headline font-bold transition-all cursor-pointer ${
+                activeTab === 'trust'
+                  ? 'bg-[#111318] text-[#C7F36B] shadow-sm'
+                  : 'bg-[#FFFEFA] text-[#50566A] hover:bg-[#EFECE3]'
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>Evidence & Trust Integrity</span>
+              <span className="px-1.5 py-0.5 rounded font-mono text-[10px] bg-emerald-500/20 text-emerald-600">
+                {assessment.trust_report.internal_evidence_index.toFixed(1)} / 100
+              </span>
+            </button>
+          )}
 
           {repository && (
             <button
@@ -227,7 +261,11 @@ export const AssessmentResultPage: React.FC = () => {
           )}
         </div>
 
-        {activeTab === 'ledger' && repository ? (
+        {activeTab === 'trust' && assessment.trust_report ? (
+          <div className="pt-2">
+            <TrustReportCard report={assessment.trust_report} />
+          </div>
+        ) : activeTab === 'ledger' && repository ? (
           <div className="pt-2">
             <EvidenceChangeLedger
               repositoryId={repository.id}

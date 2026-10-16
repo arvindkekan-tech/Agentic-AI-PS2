@@ -7,7 +7,9 @@ import type {
   Assessment,
   EvidenceReport,
   ChangeEvent,
-  MonitoringStatusResponse
+  MonitoringStatusResponse,
+  TrustReport,
+  ExtractedRequirementItem
 } from '../types';
 
 
@@ -113,6 +115,16 @@ class ApiClient {
     return this.request<Job>(`/jobs/${id}`);
   }
 
+  async updateJobRequirements(
+    id: string,
+    data: { title?: string; company?: string; extracted_requirements: ExtractedRequirementItem[] }
+  ): Promise<Job> {
+    return this.request<Job>(`/jobs/${id}/requirements`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
   // Résumés
   async uploadResume(file: File): Promise<Resume> {
     const formData = new FormData();
@@ -167,8 +179,20 @@ class ApiClient {
     return this.request<Assessment>(`/assessments/${id}`);
   }
 
+  async getAssessmentTrustReport(id: string): Promise<TrustReport> {
+    return this.request<TrustReport>(`/assessments/${id}/trust-report`);
+  }
+
+  async getSharedAssessment(id: string): Promise<Assessment> {
+    return this.request<Assessment>(`/assessments/${id}/shared`);
+  }
+
   async getAssessmentEvidence(id: string): Promise<EvidenceReport> {
     return this.request<EvidenceReport>(`/assessments/${id}/evidence`);
+  }
+
+  async getAiHealthDiagnostic(): Promise<any> {
+    return this.request<any>('/health/ai');
   }
 
   // Monitoring & Change Detection

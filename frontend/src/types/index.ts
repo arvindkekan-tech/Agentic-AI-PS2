@@ -155,6 +155,62 @@ export interface Assessment {
   resume?: Resume;
   repository?: Repository;
   requirements?: RequirementAssessment[];
+  trust_report?: TrustReport;
+}
+
+export interface IntegritySignal {
+  signal_id: string;
+  signal_type: string;
+  severity: 'low' | 'medium' | 'high';
+  reason: string;
+  observed_evidence: string;
+  limitation: string;
+}
+
+export interface EvidenceCoverage {
+  inspected_files_count: number;
+  excluded_files_count: number;
+  total_files_discovered: number;
+  coverage_ratio: number;
+  excluded_disclosures: string[];
+  scope_limitations: string;
+}
+
+export interface CitationValidity {
+  total_citations_count: number;
+  verified_citations_count: number;
+  citation_validity_ratio: number;
+  all_positive_claims_cited: boolean;
+  citation_audit_notes: string[];
+}
+
+export interface AssessmentConfidence {
+  demonstrated_count: number;
+  partial_or_needs_review_count: number;
+  unassessed_or_missing_count: number;
+  average_confidence: number;
+  uncertainty_disclosure: string;
+}
+
+export interface RepositoryProvenance {
+  pinned_commit_sha: string;
+  branch: string;
+  repo_url: string;
+  commit_timestamp?: string;
+  commit_author?: string;
+  provenance_verified: boolean;
+}
+
+export interface TrustReport {
+  assessment_id: string;
+  evidence_coverage: EvidenceCoverage;
+  citation_validity: CitationValidity;
+  assessment_confidence: AssessmentConfidence;
+  provenance: RepositoryProvenance;
+  integrity_signals: IntegritySignal[];
+  internal_evidence_index: number;
+  formula_explanation: string;
+  disclaimer: string;
 }
 
 export interface EvidenceReport {
