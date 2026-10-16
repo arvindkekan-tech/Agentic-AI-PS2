@@ -150,3 +150,39 @@ def test_map_file_evidence_findings():
     # Inconclusive third
     assert findings[2].file_path == "README.md"
     assert findings[2].finding_type == "inconclusive"
+
+
+def test_map_file_evidence_findings_with_pydantic_inspected_file_items():
+    from app.schemas.repository import InspectedFileItem
+
+    inspected_files = [
+        InspectedFileItem(path="app/main.py", size=500, lines_count=20, language="Python"),
+        InspectedFileItem(path="app/config.py", size=200, lines_count=10, language="Python"),
+    ]
+    reqs = [
+        {
+            "requirement_id": "REQ-1",
+            "normalized_skill": "FastAPI",
+            "citations": [
+                {
+                    "file_path": "app/main.py",
+                    "start_line": 1,
+                    "end_line": 5,
+                    "excerpt": "from fastapi import FastAPI",
+                    "is_valid": True
+                }
+            ]
+        }
+    ]
+
+    findings = map_file_evidence_findings(reqs, inspected_files)
+    assert len(findings) == 2
+    assert findings[0].file_path == "app/main.py"
+    assert findings[0].finding_type == "positive_evidence"
+    assert findings[0].citations_count == 1
+    assert "REQ-1 (FastAPI)" in findings[0].associated_requirements
+
+    assert findings[1].file_path == "app/config.py"
+    assert findings[1].finding_type == "inconclusive"
+    assert findings[1].citations_count == 0
+

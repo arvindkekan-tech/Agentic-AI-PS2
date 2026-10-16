@@ -34,7 +34,7 @@ PRIORITY_WEIGHTS: Dict[str, int] = {
 }
 
 
-def calculate_assessment_scores(requirements: List[Dict[str, Any]]) -> ScoringMetrics:
+def calculate_assessment_scores(requirements: List[Any]) -> ScoringMetrics:
     """
     Calculate deterministic weighted assessment scores based on Phase 2 specifications:
     - Required weight: 2
@@ -64,13 +64,14 @@ def calculate_assessment_scores(requirements: List[Dict[str, Any]]) -> ScoringMe
     unassessable_count = 0
 
     for req in requirements:
-        priority = str(req.get("priority_type", "required")).lower()
+        p_val = req.get("priority_type", "required") if isinstance(req, dict) else getattr(req, "priority_type", "required")
+        priority = str(p_val).lower()
         weight = PRIORITY_WEIGHTS.get(priority, 2)
         total_weight += weight
 
-        comb_status = req.get("combined_status", "not_demonstrated_in_analyzed_scope")
-        repo_status = req.get("repo_status", "not_demonstrated_in_analyzed_scope")
-        resume_status = req.get("resume_status", "not_demonstrated_in_analyzed_scope")
+        comb_status = req.get("combined_status", "not_demonstrated_in_analyzed_scope") if isinstance(req, dict) else getattr(req, "combined_status", "not_demonstrated_in_analyzed_scope")
+        repo_status = req.get("repo_status", "not_demonstrated_in_analyzed_scope") if isinstance(req, dict) else getattr(req, "repo_status", "not_demonstrated_in_analyzed_scope")
+        resume_status = req.get("resume_status", "not_demonstrated_in_analyzed_scope") if isinstance(req, dict) else getattr(req, "resume_status", "not_demonstrated_in_analyzed_scope")
 
         # Check if assessable
         is_unassessable = (

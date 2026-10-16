@@ -46,7 +46,7 @@ class FileEvidenceFinding(BaseModel):
     summary_excerpt: str
 
 
-def build_3way_alignment_matrix(requirements: List[Dict[str, Any]]) -> List[AlignmentMatrixItem]:
+def build_3way_alignment_matrix(requirements: List[Any]) -> List[AlignmentMatrixItem]:
     """
     Constructs a 3-way alignment matrix between Job Requirements, Résumé Claims, and Repository Evidence.
     Identifies full matches, unverified claims, hidden repo strengths, and complete gaps.
@@ -54,13 +54,13 @@ def build_3way_alignment_matrix(requirements: List[Dict[str, Any]]) -> List[Alig
     matrix: List[AlignmentMatrixItem] = []
 
     for req in requirements:
-        req_id = req.get("requirement_id", "REQ")
-        skill = req.get("normalized_skill", "")
-        priority = req.get("priority_type", "required")
-        resume_status = req.get("resume_status", "not_demonstrated_in_analyzed_scope")
-        repo_status = req.get("repo_status", "not_demonstrated_in_analyzed_scope")
-        comb_status = req.get("combined_status", "not_demonstrated_in_analyzed_scope")
-        citations = req.get("citations", [])
+        req_id = req.get("requirement_id", "REQ") if isinstance(req, dict) else getattr(req, "requirement_id", "REQ")
+        skill = req.get("normalized_skill", "") if isinstance(req, dict) else getattr(req, "normalized_skill", "")
+        priority = req.get("priority_type", "required") if isinstance(req, dict) else getattr(req, "priority_type", "required")
+        resume_status = req.get("resume_status", "not_demonstrated_in_analyzed_scope") if isinstance(req, dict) else getattr(req, "resume_status", "not_demonstrated_in_analyzed_scope")
+        repo_status = req.get("repo_status", "not_demonstrated_in_analyzed_scope") if isinstance(req, dict) else getattr(req, "repo_status", "not_demonstrated_in_analyzed_scope")
+        comb_status = req.get("combined_status", "not_demonstrated_in_analyzed_scope") if isinstance(req, dict) else getattr(req, "combined_status", "not_demonstrated_in_analyzed_scope")
+        citations = req.get("citations", []) if isinstance(req, dict) else getattr(req, "citations", [])
 
         # Categorize alignment
         if resume_status == "demonstrated" and repo_status == "demonstrated":
@@ -98,8 +98,14 @@ def build_3way_alignment_matrix(requirements: List[Dict[str, Any]]) -> List[Alig
                 f"Your repository code proves practical experience with {skill}, but this was not emphasized on your résumé. "
                 "You are under-representing a proven strength!"
             )
-            valid_cits = [c for c in citations if c.get("is_valid")]
-            sample_file = valid_cits[0].get("file_path", "source code") if valid_cits else "your repo"
+            valid_cits = [
+                c for c in citations
+                if (c.get("is_valid") if isinstance(c, dict) else getattr(c, "is_valid", False))
+            ]
+            sample_file = "your repo"
+            if valid_cits:
+                first_c = valid_cits[0]
+                sample_file = first_c.get("file_path", "source code") if isinstance(first_c, dict) else getattr(first_c, "file_path", "source code")
             resume_action = (
                 f"Add a bullet point to your résumé highlighting {skill}, referencing concrete implementation details "
                 f"(e.g., as implemented in {sample_file})."
@@ -152,7 +158,7 @@ def build_3way_alignment_matrix(requirements: List[Dict[str, Any]]) -> List[Alig
 
 
 def generate_actionable_recommendations(
-    requirements: List[Dict[str, Any]]
+    requirements: List[Any]
 ) -> List[ActionableRecommendation]:
     """
     Generates actionable, prioritized recommendations categorized by effort:
@@ -164,13 +170,13 @@ def generate_actionable_recommendations(
     recommendations: List[ActionableRecommendation] = []
 
     for req in requirements:
-        comb_status = req.get("combined_status", "")
-        repo_status = req.get("repo_status", "")
-        resume_status = req.get("resume_status", "")
-        priority = req.get("priority_type", "required")
-        skill = req.get("normalized_skill", "")
-        req_id = req.get("requirement_id", "REQ")
-        action_note = req.get("improvement_action") or ""
+        comb_status = req.get("combined_status", "") if isinstance(req, dict) else getattr(req, "combined_status", "")
+        repo_status = req.get("repo_status", "") if isinstance(req, dict) else getattr(req, "repo_status", "")
+        resume_status = req.get("resume_status", "") if isinstance(req, dict) else getattr(req, "resume_status", "")
+        priority = req.get("priority_type", "required") if isinstance(req, dict) else getattr(req, "priority_type", "required")
+        skill = req.get("normalized_skill", "") if isinstance(req, dict) else getattr(req, "normalized_skill", "")
+        req_id = req.get("requirement_id", "REQ") if isinstance(req, dict) else getattr(req, "requirement_id", "REQ")
+        action_note = (req.get("improvement_action") if isinstance(req, dict) else getattr(req, "improvement_action", None)) or ""
 
         # Skip requirements that are already fully demonstrated across both sources
         if resume_status == "demonstrated" and repo_status == "demonstrated":
@@ -304,19 +310,20 @@ def generate_actionable_recommendations(
 
 
 def map_file_evidence_findings(
-    requirements: List[Dict[str, Any]],
-    inspected_files: List[Dict[str, Any]]
+    requirements: List[Any],
+    inspected_files: List[Any]
 ) -> List[FileEvidenceFinding]:
     """
     Maps inspected repository files to requirement findings:
     - Positive evidence: valid citations exist in the file
     - Partial evidence: invalid or incomplete citations found
     - Inconclusive: inspected by scanner but no relevant citations matched
+    Handles both dict items and Pydantic models (such as InspectedFileItem).
     """
     file_map: Dict[str, Dict[str, Any]] = {}
 
     for f in inspected_files:
-        path = f.get("path", "")
+        path = f.get("path", "") if isinstance(f, dict) else getattr(f, "path", "")
         if path:
             file_map[path] = {
                 "file_path": path,
@@ -328,12 +335,13 @@ def map_file_evidence_findings(
             }
 
     for req in requirements:
-        skill = req.get("normalized_skill", "")
-        req_id = req.get("requirement_id", "REQ")
+        skill = req.get("normalized_skill", "") if isinstance(req, dict) else getattr(req, "normalized_skill", "")
+        req_id = req.get("requirement_id", "REQ") if isinstance(req, dict) else getattr(req, "requirement_id", "REQ")
         label = f"{req_id} ({skill})"
 
-        for cit in req.get("citations", []):
-            fpath = cit.get("file_path")
+        citations = req.get("citations", []) if isinstance(req, dict) else getattr(req, "citations", [])
+        for cit in citations:
+            fpath = cit.get("file_path") if isinstance(cit, dict) else getattr(cit, "file_path", None)
             if not fpath:
                 continue
 
@@ -352,17 +360,18 @@ def map_file_evidence_findings(
                 entry["associated_requirements"].append(label)
 
             entry["citations_count"] += 1
-            start = cit.get("start_line")
-            end = cit.get("end_line")
+            start = cit.get("start_line") if isinstance(cit, dict) else getattr(cit, "start_line", None)
+            end = cit.get("end_line") if isinstance(cit, dict) else getattr(cit, "end_line", None)
             if start and end:
                 entry["lines_referenced"].append(f"L{start}-L{end}")
             elif start:
                 entry["lines_referenced"].append(f"L{start}")
 
-            if not entry["summary_excerpt"] and cit.get("excerpt"):
-                entry["summary_excerpt"] = cit.get("excerpt", "")[:120]
+            excerpt = cit.get("excerpt", "") if isinstance(cit, dict) else getattr(cit, "excerpt", "")
+            if not entry["summary_excerpt"] and excerpt:
+                entry["summary_excerpt"] = excerpt[:120]
 
-            is_valid = cit.get("is_valid", False)
+            is_valid = cit.get("is_valid", False) if isinstance(cit, dict) else getattr(cit, "is_valid", False)
             if is_valid:
                 entry["finding_type"] = "positive_evidence"
             elif entry["finding_type"] != "positive_evidence":

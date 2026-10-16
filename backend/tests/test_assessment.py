@@ -38,6 +38,9 @@ def mock_repo_record(db_session, test_user):
     return repo
 
 
+from app.schemas.repository import InspectedFileItem
+
+
 @pytest.fixture
 def mock_snapshot_data():
     return {
@@ -64,7 +67,14 @@ def mock_snapshot_data():
                 ]
             }
         },
-        "inspected_files": [],
+        "inspected_files": [
+            InspectedFileItem(
+                path="app/main.py",
+                size=300,
+                lines_count=8,
+                language="Python"
+            )
+        ],
         "excluded_files": [],
         "coverage": None
     }
