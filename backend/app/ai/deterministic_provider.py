@@ -3,12 +3,18 @@ from typing import List, Dict, Any
 from app.ai.base import BaseAIProvider
 
 
+from app.services.rag_service import chunk_repository_snapshot, DeterministicLexicalRetrievalProvider
+
+
 class DeterministicProvider(BaseAIProvider):
     """
-    Deterministic rule-based assessment engine.
-    Performs deterministic evidence extraction against the exact repository lines and résumé text.
+    Deterministic rule-based assessment engine with Evidence RAG.
+    Performs deterministic evidence extraction against exact repository chunks and résumé text.
     Ensures 100% stable, zero-hallucination citations during tests and when external AI key is absent.
     """
+
+    def __init__(self):
+        self.retrieval_provider = DeterministicLexicalRetrievalProvider()
 
     def assess_requirements(
         self,
@@ -22,10 +28,13 @@ class DeterministicProvider(BaseAIProvider):
         branch = repository_snapshot.get("branch", "main")
         commit_sha = repository_snapshot.get("analyzed_sha", "")
 
+        # Chunk all repository snapshot files
+        all_chunks = chunk_repository_snapshot(repository_snapshot)
+
         resume_lower = resume_text.lower()
 
         for req in requirements:
-            req_id = req.get("id", "REQ-1")
+            req_id = req.get("id") or req.get("requirement_id", "REQ-1")
             skill = req.get("normalized_skill", "")
             wording = req.get("original_wording", "")
             priority = req.get("priority_type", "required")
@@ -62,59 +71,52 @@ class DeterministicProvider(BaseAIProvider):
                 resume_status = "not_demonstrated_in_analyzed_scope"
                 resume_explanation = f"No explicit statement or documentation of {skill} was identified in the parsed résumé text."
 
-            # 2. Inspect repository evidence
+            # 2. Inspect repository evidence via Evidence RAG
+            rag_result = self.retrieval_provider.retrieve_chunks_for_requirement(req, all_chunks, top_k=3)
             repo_citations = []
-            matched_file_path = None
-            start_l = 1
-            end_l = 1
-            excerpt_lines = []
-            evidence_type = "implementation"
-
-            for path, file_info in files.items():
-                lines = file_info.get("lines", [])
-                for i, line in enumerate(lines):
-                    line_lower = line.lower()
-                    if any(token in line_lower for token in skill_tokens):
-                        # Found a match! Extract a bounded 1 to 5 line window
-                        matched_file_path = path
-                        start_l = max(1, i + 1)
-                        end_l = min(len(lines), i + 3)
-                        excerpt_lines = lines[start_l - 1 : end_l]
-                        
-                        # Determine evidence type
-                        if "test" in path.lower() or "spec" in path.lower():
-                            evidence_type = "test_code"
-                        elif any(cfg in path.lower() for cfg in ["config", "package.json", "requirements", "docker", ".yaml"]):
-                            evidence_type = "configuration"
-                        elif path.endswith(".md"):
-                            evidence_type = "documentation"
-                        else:
-                            evidence_type = "implementation"
+            
+            if rag_result.retrieved_chunks and rag_result.retrieval_quality in ("high", "moderate"):
+                top_chunk = rag_result.retrieved_chunks[0]
+                chunk_lines = top_chunk.content.split("\n")
+                
+                # Locate most relevant line inside chunk
+                best_line_offset = 0
+                for idx, line in enumerate(chunk_lines):
+                    if any(t in line.lower() for t in skill_tokens):
+                        best_line_offset = idx
                         break
-                if matched_file_path:
-                    break
 
-            if matched_file_path and excerpt_lines:
+                start_l = top_chunk.start_line + best_line_offset
+                end_l = min(top_chunk.end_line, start_l + 3)
+                
+                slice_start = best_line_offset
+                slice_end = min(len(chunk_lines), best_line_offset + 4)
+                excerpt_lines = chunk_lines[slice_start:slice_end]
                 raw_excerpt = "\n".join(excerpt_lines)
-                if evidence_type == "implementation":
+
+                if top_chunk.file_type == "implementation":
+                    evidence_type = "implementation"
                     repo_status = "demonstrated"
-                    repo_explanation = f"Found substantive implementation evidence of {skill} in '{matched_file_path}' (lines {start_l}-{end_l})."
-                elif evidence_type == "test_code":
+                    repo_explanation = f"Found substantive implementation evidence of {skill} in '{top_chunk.file_path}' (lines {start_l}-{end_l})."
+                elif top_chunk.file_type == "test":
+                    evidence_type = "test_code"
                     repo_status = "partial_or_needs_review"
-                    repo_explanation = f"Found test suite code exercising {skill} in '{matched_file_path}' (lines {start_l}-{end_l})."
-                elif evidence_type == "configuration":
+                    repo_explanation = f"Found test suite code exercising {skill} in '{top_chunk.file_path}' (lines {start_l}-{end_l})."
+                elif top_chunk.file_type == "documentation":
+                    evidence_type = "documentation"
                     repo_status = "partial_or_needs_review"
-                    repo_explanation = f"Found configuration/dependency declaring {skill} in '{matched_file_path}', but no deeper runtime logic in inspected files."
+                    repo_explanation = f"Found documentation mentioning {skill} in '{top_chunk.file_path}'."
                 else:
+                    evidence_type = "configuration"
                     repo_status = "partial_or_needs_review"
-                    repo_explanation = f"Found documentation mentioning {skill} in '{matched_file_path}'."
+                    repo_explanation = f"Found configuration/dependency declaring {skill} in '{top_chunk.file_path}', but no deeper runtime logic in inspected files."
 
                 repo_citations.append({
                     "evidence_type": evidence_type,
                     "repo_url": repo_url,
                     "branch": branch,
                     "commit_sha": commit_sha,
-                    "file_path": matched_file_path,
+                    "file_path": top_chunk.file_path,
                     "start_line": start_l,
                     "end_line": end_l,
                     "excerpt": raw_excerpt,
@@ -122,7 +124,7 @@ class DeterministicProvider(BaseAIProvider):
                 })
             else:
                 repo_status = "not_demonstrated_in_analyzed_scope"
-                repo_explanation = f"No source code demonstrating {skill} was found across the {len(files)} files analyzed in commit {commit_sha[:7]}."
+                repo_explanation = f"No source code demonstrating {skill} was found across the {len(files)} files analyzed in commit {commit_sha[:7] if commit_sha else 'HEAD'}."
 
             # 3. Combined interpretation
             all_citations = resume_citations + repo_citations

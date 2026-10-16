@@ -8,16 +8,20 @@ from app.core.config import settings
 from app.ai.base import BaseAIProvider
 
 
+from app.services.rag_service import chunk_repository_snapshot, DeterministicLexicalRetrievalProvider, format_bounded_rag_context
+
+
 class GeminiProvider(BaseAIProvider):
     """
-    Google Gemini AI Assessment Provider.
-    Implements structured JSON output with system prompts, bounded payloads, retries, and error handling.
+    Google Gemini AI Assessment Provider with Evidence RAG.
+    Implements structured JSON output with system prompts, bounded RAG payloads, retries, and error handling.
     """
 
     def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
         self.api_key = api_key or settings.GEMINI_API_KEY
         self.model = model or settings.GEMINI_MODEL or "gemini-2.5-flash"
         self.endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+        self.retriever = DeterministicLexicalRetrievalProvider()
 
     def assess_requirements(
         self,
@@ -31,24 +35,17 @@ class GeminiProvider(BaseAIProvider):
                 detail="Gemini API Key is not configured. Set GEMINI_API_KEY in backend environment (.env)."
             )
 
-        # Prepare bounded payload: only send file paths, line counts, and top code excerpts
-        files = repository_snapshot.get("files", {})
+        # Prepare bounded RAG payload: chunk snapshot and retrieve top relevant chunks per requirement
         repo_url = repository_snapshot.get("repo_url", "")
         branch = repository_snapshot.get("branch", "main")
         commit_sha = repository_snapshot.get("analyzed_sha", "")
 
-        bounded_files_summary = []
-        for path, finfo in list(files.items())[:20]:
-            lines = finfo.get("lines", [])
-            preview_lines = []
-            for idx, line in enumerate(lines[:100]):  # First 100 lines max per file
-                preview_lines.append(f"{idx + 1}: {line}")
-            bounded_files_summary.append({
-                "file_path": path,
-                "lines_count": len(lines),
-                "language": finfo.get("language", "Code"),
-                "sample_content": "\n".join(preview_lines)
-            })
+        chunks = chunk_repository_snapshot(repository_snapshot)
+        rag_results = [
+            self.retriever.retrieve_chunks_for_requirement(req, chunks, top_k=3)
+            for req in requirements
+        ]
+        bounded_rag_context = format_bounded_rag_context(rag_results)
 
         system_instruction = (
             "You are ProofPath's automated evidence validation engine. "
@@ -58,7 +55,7 @@ class GeminiProvider(BaseAIProvider):
             "CRITICAL EVIDENCE RULES: "
             "1. Never conflate findings. Missing résumé mention != missing skill. Skill not in inspected files != applicant lacks it. "
             "2. Allowed statuses are ONLY: 'demonstrated', 'partial_or_needs_review', 'not_demonstrated_in_analyzed_scope', 'unable_to_assess'. "
-            "3. If repository code implements the skill, set repo_status='demonstrated' and provide a citation with exact line numbers and exact excerpt. "
+            "3. If repository code implements the skill, set repo_status='demonstrated' and provide a citation with exact line numbers and exact excerpt matching the provided chunk. "
             "4. If it is only mentioned in a config/README or test file, set repo_status='partial_or_needs_review'. "
             "5. Never fabricate citations or line numbers. If no code exists, repo_status must be 'not_demonstrated_in_analyzed_scope'. "
             "6. Output MUST be a valid JSON array of objects with the exact schema requested."
@@ -67,12 +64,12 @@ class GeminiProvider(BaseAIProvider):
         user_content = {
             "requirements": requirements,
             "resume_text": resume_text[:6000],  # Bounded excerpt
-            "repository": {
+            "repository_metadata": {
                 "repo_url": repo_url,
                 "branch": branch,
-                "commit_sha": commit_sha,
-                "files": bounded_files_summary
-            }
+                "commit_sha": commit_sha
+            },
+            "retrieved_code_evidence": bounded_rag_context
         }
 
         request_body = {
