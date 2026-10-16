@@ -1,13 +1,13 @@
 # ProofPath 2.0 — Implementation Status
 
 **Active Feature Branch:** `feat/proofpath-intelligence-v2`  
-**Current Milestone Completed:** Milestone 2 (Real Job Source Ingestion and Web Scraping)  
+**Current Milestone Completed:** Milestone 3 (Evidence RAG and Code Intelligence)  
 **Last Updated:** October 17, 2026  
-**Latest Commit SHA:** `470ecc9`
+**Latest Commit SHA:** `452e17d`
 
 ---
 
-## 1. Actual Work Completed (Milestones 0 & 2)
+## 1. Actual Work Completed (Milestones 0, 2 & 3)
 ### Milestone 0: Diagnose and Stabilize
 1. **Diagnosed SQLite Watcher Failure:**
    - Isolated root cause: `proofpath.db` was created prior to the addition of repository monitoring columns (`last_checked_at`, `last_observed_head_sha`, `monitoring_enabled`, `monitoring_interval_seconds`). SQLAlchemy's `create_all` does not issue `ALTER TABLE` statements for pre-existing tables.
@@ -34,22 +34,38 @@
 4. **Automated Verification:**
    - Expanded `backend/tests/test_jobs.py` to verify requirement typing, excerpt preservation, and update endpoint.
 
+### Milestone 3: Evidence RAG and Code Intelligence
+1. **Repository Snapshot Chunking (`rag_service.py`):**
+   - Built sliding-window chunker preserving exact 1-based start and end line numbers and SHA-256 content hashes.
+   - Categorized files into `implementation`, `test`, `config`, and `documentation`.
+   - Implemented symbol and AST extraction for Python and TypeScript/JavaScript (`def`, `class`, `function`, `const = () =>`).
+2. **Deterministic Lexical & Symbol Retrieval Provider:**
+   - Built `DeterministicLexicalRetrievalProvider` implementing `BaseRetrievalProvider` interface.
+   - Enforced word boundary regex matching (`\b`) on normalized skills and domain synonyms, preventing sub-word false positives (e.g., `rust` inside `untrusted`).
+   - Implemented relevance ranking and bounded context assembly (`format_bounded_rag_context`) to send only top-scored relevant chunks to the model prompt.
+3. **Provider Integration & Prompt Injection Defense:**
+   - Integrated Evidence RAG chunking and context construction into both `DeterministicProvider` and `GeminiProvider`.
+   - Enforced strict system instructions treating code comments and repository text as untrusted data.
+4. **Labeled Evaluation Test Pack (`backend/tests/test_rag.py`):**
+   - 8 comprehensive tests covering genuine implementation, test-only evidence, README-only claims, keyword collisions, missing evidence, prompt injection, and citations.
+   - Verified 100% precision on positive claims, 100% citation verification rate, and 100% appropriate abstention on unevidenced skills.
+
 ---
 
 ## 2. Files & Services Changed
-- `backend/app/schemas/job.py`: Added metadata fields to `ExtractedRequirementItem` and added `JobRequirementsUpdateRequest`.
-- `backend/app/services/job_service.py`: Added JSON-LD parsing, type classification, and excerpt extraction.
-- `backend/app/api/v1/endpoints/jobs.py`: Supported new return signatures, company extraction, and added `PUT /api/v1/jobs/{job_id}/requirements`.
-- `backend/tests/test_jobs.py`: Added test coverage for metadata and PUT endpoint.
+- `backend/app/services/rag_service.py` (New): AST/lexical code chunking and retrieval provider.
+- `backend/app/ai/deterministic_provider.py` (Modified): Wired into Evidence RAG chunking and bounded citation extraction.
+- `backend/app/ai/gemini_provider.py` (Modified): Wired into Evidence RAG context injection.
+- `backend/tests/test_rag.py` (New): Reproducible labeled evaluation test suite.
 - `docs/IMPLEMENTATION_STATUS.md`: Updated status.
 
 ---
 
 ## 3. Tests Executed & Outcomes
-- `backend\.venv\Scripts\pytest backend\tests`: **35 passed, 0 failed in 3.12s**
+- `backend\.venv\Scripts\pytest backend\tests`: **43 passed, 0 failed in 3.10s**
 - `npm run build --prefix frontend`: **0 errors, built successfully**
 
 ---
 
 ## 4. Next Milestone
-**Milestone 3: Evidence RAG and Code Intelligence**
+**Milestone 4: Trust and Evidence Integrity Engine**

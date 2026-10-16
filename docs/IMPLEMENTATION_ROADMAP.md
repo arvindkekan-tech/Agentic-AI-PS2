@@ -28,12 +28,12 @@ This roadmap tracks engineering milestones from stabilization through AI/RAG int
   - [x] Grounded requirement extraction preserving source traceability (URL, excerpt, method)
   - [x] User review and editing of extracted requirements before assessment launch
 
-- [ ] **Milestone 3: Evidence RAG and Code Intelligence**
-  - [ ] AST and lexical code chunking preserving exact 1-based line numbers and metadata
-  - [ ] Deterministic keyword/symbol retrieval layer with provider interface for embeddings
-  - [ ] Bounded context construction: inject only relevant chunks into model prompt
-  - [ ] Structured evaluation schema conforming to strict Pydantic models
-  - [ ] Reproducible labeled evaluation test pack measuring F1, precision, and citation validity
+- [x] **Milestone 3: Evidence RAG and Code Intelligence**
+  - [x] AST and lexical code chunking preserving exact 1-based line numbers and metadata
+  - [x] Deterministic keyword/symbol retrieval layer with provider interface for embeddings
+  - [x] Bounded context construction: inject only relevant chunks into model prompt
+  - [x] Structured evaluation schema conforming to strict Pydantic models
+  - [x] Reproducible labeled evaluation test pack measuring F1, precision, and citation validity
 
 - [ ] **Milestone 4: Trust and Evidence Integrity Engine**
   - [ ] Decoupled 5-dimensional trust report: Evidence Coverage, Citation Validity, Assessment Confidence, Provenance, and Integrity Signals
