@@ -22,11 +22,11 @@ This roadmap tracks engineering milestones from stabilization through AI/RAG int
   - [ ] Implement Recruiter/Mentor Shared Assessment View with authorization barriers
   - [ ] Verify responsive layouts, accessible contrast, and zero dead buttons
 
-- [ ] **Milestone 2: Real Job Source Ingestion and Web Scraping**
-  - [ ] Multi-mode ingestion: direct URL, JSON-LD structured JobPosting extraction, pasted text fallback
-  - [ ] SSRF security hardening: private IP blocking, redirect destination validation, timeout & size limits
-  - [ ] Grounded requirement extraction preserving source traceability (URL, excerpt, method)
-  - [ ] User review and editing of extracted requirements before assessment launch
+- [x] **Milestone 2: Real Job Source Ingestion and Web Scraping**
+  - [x] Multi-mode ingestion: direct URL, JSON-LD structured JobPosting extraction, pasted text fallback
+  - [x] SSRF security hardening: private IP blocking, redirect destination validation, timeout & size limits
+  - [x] Grounded requirement extraction preserving source traceability (URL, excerpt, method)
+  - [x] User review and editing of extracted requirements before assessment launch
 
 - [ ] **Milestone 3: Evidence RAG and Code Intelligence**
   - [ ] AST and lexical code chunking preserving exact 1-based line numbers and metadata
