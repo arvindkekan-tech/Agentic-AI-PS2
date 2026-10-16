@@ -26,10 +26,13 @@ env/
 
 # SQLite & Local DB
 *.db
+*.db*
 *.sqlite
 *.sqlite3
+*.backup*
 backend/proofpath.db
 proofpath.db
+
 uploads/
 backend/uploads/
 
