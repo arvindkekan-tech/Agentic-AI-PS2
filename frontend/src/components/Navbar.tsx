@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShieldCheck, PlusCircle, LayoutDashboard, History, LogOut, User as UserIcon } from 'lucide-react';
+import { ShieldCheck, PlusCircle, LayoutDashboard, History, LogOut, Compass, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Navbar: React.FC = () => {
@@ -27,11 +27,11 @@ export const Navbar: React.FC = () => {
             <div className="font-headline font-bold text-base tracking-tight text-white flex items-center gap-1.5">
               ProofPath
               <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-[#282B36] text-[#C7F36B] tracking-wider border border-[#3B4050]">
-                Phase 1
+                Phase 2
               </span>
             </div>
             <div className="text-[10px] text-[#9A9FB1] font-mono tracking-tight -mt-0.5">
-              Make the evidence visible
+              Career Intelligence & Verified Evidence
             </div>
           </div>
         </Link>
@@ -49,6 +49,18 @@ export const Navbar: React.FC = () => {
             >
               <LayoutDashboard className="w-3.5 h-3.5 text-[#C7F36B]" />
               <span className="hidden sm:inline">Workspace</span>
+            </Link>
+
+            <Link
+              to="/jobs/discover"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                isActive('/jobs/discover')
+                  ? 'bg-[#1B1D24] text-[#C7F36B] border border-[#282B36]'
+                  : 'text-[#9A9FB1] hover:text-white hover:bg-[#1B1D24]/60'
+              }`}
+            >
+              <Compass className="w-3.5 h-3.5 text-[#C7F36B]" />
+              <span className="hidden sm:inline">Discover Jobs</span>
             </Link>
 
             <Link
@@ -86,7 +98,7 @@ export const Navbar: React.FC = () => {
 
               <button
                 onClick={handleLogout}
-                className="p-1.5 text-[#9A9FB1] hover:text-white hover:bg-[#282B36] rounded-lg transition-colors"
+                className="p-1.5 text-[#9A9FB1] hover:text-white hover:bg-[#282B36] rounded-lg transition-colors cursor-pointer"
                 title="Log out"
               >
                 <LogOut className="w-4 h-4" />

@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, String, Text, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.db.session import Base
@@ -15,6 +15,7 @@ class RequirementAssessment(Base):
     original_wording = Column(Text, nullable=False)
     normalized_skill = Column(String(255), nullable=False)
     priority_type = Column(String(50), nullable=False, default="required")  # "required", "preferred"
+    weight = Column(Integer, nullable=False, default=2)
     
     # Résumé finding
     resume_status = Column(String(50), nullable=False)  # demonstrated, partial_or_needs_review, not_demonstrated_in_analyzed_scope, unable_to_assess

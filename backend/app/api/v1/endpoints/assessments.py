@@ -14,6 +14,7 @@ from app.schemas.assessment import (
     CitationResponse,
     EvidenceResponse
 )
+from app.services.change_ledger_service import compare_assessments, AssessmentComparisonResponse
 from app.api.v1.endpoints.jobs import format_job_response
 from app.api.v1.endpoints.resumes import format_resume_response
 from app.api.v1.endpoints.repositories import format_repo_response
@@ -23,11 +24,17 @@ from app.services.assessment_service import create_and_run_assessment
 router = APIRouter(prefix="/assessments", tags=["Assessments"])
 
 
-def format_assessment_summary(assessment: Assessment) -> AssessmentResponse:
+def safe_json_loads(json_str: str, default_val):
+    if not json_str:
+        return default_val
     try:
-        counts = json.loads(assessment.summary_counts_json)
+        return json.loads(json_str)
     except Exception:
-        counts = {}
+        return default_val
+
+
+def format_assessment_summary(assessment: Assessment) -> AssessmentResponse:
+    counts = safe_json_loads(assessment.summary_counts_json, {})
 
     return AssessmentResponse(
         id=assessment.id,
@@ -41,6 +48,10 @@ def format_assessment_summary(assessment: Assessment) -> AssessmentResponse:
         provider_name=assessment.provider_name,
         model_name=assessment.model_name,
         summary_counts=counts,
+        compatibility_score=getattr(assessment, "compatibility_score", 0.0) or 0.0,
+        evidence_coverage=getattr(assessment, "evidence_coverage", 0.0) or 0.0,
+        evidence_match_score=getattr(assessment, "evidence_match_score", 0.0) or 0.0,
+        resume_alignment_score=getattr(assessment, "resume_alignment_score", 0.0) or 0.0,
         created_at=assessment.created_at,
         updated_at=assessment.updated_at
     )
@@ -59,6 +70,7 @@ def format_assessment_detail(assessment: Assessment) -> AssessmentDetailResponse
                 original_wording=req.original_wording,
                 normalized_skill=req.normalized_skill,
                 priority_type=req.priority_type,
+                weight=getattr(req, "weight", 2) or 2,
                 resume_status=req.resume_status,
                 resume_explanation=req.resume_explanation,
                 repo_status=req.repo_status,
@@ -75,12 +87,21 @@ def format_assessment_detail(assessment: Assessment) -> AssessmentDetailResponse
     resume_res = format_resume_response(assessment.resume) if assessment.resume else None
     repo_res = format_repo_response(assessment.repository) if assessment.repository else None
 
+    scoring_meta = safe_json_loads(getattr(assessment, "scoring_metadata_json", "{}"), {})
+    recs = safe_json_loads(getattr(assessment, "recommendations_json", "[]"), [])
+    alignment_mat = safe_json_loads(getattr(assessment, "alignment_matrix_json", "[]"), [])
+    file_finds = safe_json_loads(getattr(assessment, "file_findings_json", "[]"), [])
+
     return AssessmentDetailResponse(
         **base.model_dump(),
         job=job_res,
         resume=resume_res,
         repository=repo_res,
-        requirements=req_responses
+        requirements=req_responses,
+        scoring_metadata=scoring_meta,
+        recommendations=recs,
+        alignment_matrix=alignment_mat,
+        file_findings=file_finds
     )
 
 
@@ -155,4 +176,23 @@ def get_assessment_evidence(
         total_citations=len(all_citations),
         valid_citations_count=valid_count,
         citations=all_citations
+    )
+
+
+@router.get("/{assessment_id}/compare/{previous_id}", response_model=AssessmentComparisonResponse, summary="Compare two assessments (Evidence Change Ledger)")
+def compare_assessment_versions(
+    assessment_id: str,
+    previous_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Evidence Change Ledger: compares two assessment runs for the same or different commits,
+    providing delta metrics, status progression matrix, and narrative explanation.
+    """
+    return compare_assessments(
+        db=db,
+        current_assessment_id=assessment_id,
+        previous_assessment_id=previous_id,
+        user_id=current_user.id
     )

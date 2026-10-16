@@ -5,7 +5,10 @@ import type {
   Resume,
   Repository,
   Assessment,
-  EvidenceReport
+  EvidenceReport,
+  DiscoveredJob,
+  JobSourceInfo,
+  AssessmentComparisonResponse
 } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
@@ -166,6 +169,52 @@ class ApiClient {
 
   async getAssessmentEvidence(id: string): Promise<EvidenceReport> {
     return this.request<EvidenceReport>(`/assessments/${id}/evidence`);
+  }
+
+  async compareAssessments(currentId: string, previousId: string): Promise<AssessmentComparisonResponse> {
+    return this.request<AssessmentComparisonResponse>(`/assessments/${currentId}/compare/${previousId}`);
+  }
+
+  // Job Discovery
+  async getJobSources(): Promise<JobSourceInfo[]> {
+    return this.request<JobSourceInfo[]>('/job-sources');
+  }
+
+  async searchDiscoveredJobs(params?: {
+    query?: string;
+    remote?: boolean;
+    limit?: number;
+    sources?: string[];
+  }): Promise<DiscoveredJob[]> {
+    const searchParams = new URLSearchParams();
+    if (params?.query) searchParams.set('query', params.query);
+    if (params?.remote !== undefined) searchParams.set('remote', String(params.remote));
+    if (params?.limit) searchParams.set('limit', String(params.limit));
+    if (params?.sources) {
+      params.sources.forEach(s => searchParams.append('sources', s));
+    }
+    const qs = searchParams.toString();
+    return this.request<DiscoveredJob[]>(`/job-discovery/search${qs ? `?${qs}` : ''}`);
+  }
+
+  async matchDiscoveredJobs(data: {
+    candidate_skills: string[];
+    query?: string;
+    limit?: number;
+    remote?: boolean;
+    sources?: string[];
+  }): Promise<DiscoveredJob[]> {
+    return this.request<DiscoveredJob[]>('/job-discovery/match', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async importDiscoveredJob(discoveredJob: DiscoveredJob): Promise<Job> {
+    return this.request<Job>('/jobs/import-discovered', {
+      method: 'POST',
+      body: JSON.stringify(discoveredJob)
+    });
   }
 }
 

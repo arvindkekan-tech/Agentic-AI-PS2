@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, String, Text, DateTime, Float, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.db.session import Base
@@ -23,6 +23,16 @@ class Assessment(Base):
     provider_name = Column(String(50), nullable=False, default="deterministic")
     model_name = Column(String(100), nullable=False, default="heuristic-v1")
     summary_counts_json = Column(Text, nullable=False, default="{}")
+    
+    # Phase 2 Advanced Career Intelligence Metrics
+    compatibility_score = Column(Float, nullable=False, default=0.0)
+    evidence_coverage = Column(Float, nullable=False, default=0.0)
+    evidence_match_score = Column(Float, nullable=False, default=0.0)
+    resume_alignment_score = Column(Float, nullable=False, default=0.0)
+    scoring_metadata_json = Column(Text, nullable=False, default="{}")
+    recommendations_json = Column(Text, nullable=False, default="[]")
+    alignment_matrix_json = Column(Text, nullable=False, default="[]")
+    file_findings_json = Column(Text, nullable=False, default="[]")
     
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)

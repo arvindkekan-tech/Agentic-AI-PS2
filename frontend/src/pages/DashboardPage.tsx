@@ -64,13 +64,23 @@ export const DashboardPage: React.FC = () => {
             </h1>
           </div>
 
-          <Link
-            to="/wizard"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#111318] text-[#C7F36B] font-headline font-semibold text-sm hover:bg-[#1B1D24] transition-all shadow-md hover:scale-[1.02]"
-          >
-            <PlusCircle className="w-4 h-4 text-[#C7F36B]" />
-            <span>New Assessment</span>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/jobs/discover"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#EFECE3] hover:bg-[#E2DDD3] text-[#111318] font-headline font-medium text-sm transition-all border border-[#D5CFBF]"
+            >
+              <span>Discover Jobs</span>
+              <ArrowRight className="w-4 h-4 text-[#50566A]" />
+            </Link>
+
+            <Link
+              to="/wizard"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#111318] text-[#C7F36B] font-headline font-semibold text-sm hover:bg-[#1B1D24] transition-all shadow-md hover:scale-[1.02]"
+            >
+              <PlusCircle className="w-4 h-4 text-[#C7F36B]" />
+              <span>New Assessment</span>
+            </Link>
+          </div>
         </div>
       </div>
 

@@ -9,6 +9,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { WizardPage } from './pages/WizardPage';
 import { AssessmentResultPage } from './pages/AssessmentResultPage';
 import { AssessmentHistoryPage } from './pages/AssessmentHistoryPage';
+import { JobDiscoveryPage } from './pages/JobDiscoveryPage';
 import { Loader2 } from 'lucide-react';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -45,6 +46,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <DashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/jobs/discover"
+                element={
+                  <ProtectedRoute>
+                    <JobDiscoveryPage />
                   </ProtectedRoute>
                 }
               />

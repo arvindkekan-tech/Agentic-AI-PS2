@@ -122,7 +122,20 @@ def create_and_run_assessment(
     else:
         overall_status = "not_demonstrated_in_analyzed_scope"
 
-    # 5. Persist Assessment
+    # 5. Phase 2 Advanced Career Intelligence Calculations
+    from app.services.scoring_service import calculate_assessment_scores
+    from app.services.career_intelligence_service import (
+        build_3way_alignment_matrix,
+        generate_actionable_recommendations,
+        map_file_evidence_findings
+    )
+
+    scores = calculate_assessment_scores(validated_findings)
+    alignment_matrix = build_3way_alignment_matrix(validated_findings)
+    recommendations = generate_actionable_recommendations(validated_findings)
+    file_findings = map_file_evidence_findings(validated_findings, snapshot.get("inspected_files", []))
+
+    # 6. Persist Assessment
     assessment = Assessment(
         user_id=user.id,
         job_id=job.id,
@@ -133,7 +146,15 @@ def create_and_run_assessment(
         error_message=None,
         provider_name=provider_name,
         model_name=model_name,
-        summary_counts_json=json.dumps(status_counts)
+        summary_counts_json=json.dumps(status_counts),
+        compatibility_score=scores.compatibility_score,
+        evidence_coverage=scores.evidence_coverage,
+        evidence_match_score=scores.evidence_match_score,
+        resume_alignment_score=scores.resume_alignment_score,
+        scoring_metadata_json=scores.model_dump_json(),
+        recommendations_json=json.dumps([r.model_dump() for r in recommendations]),
+        alignment_matrix_json=json.dumps([m.model_dump() for m in alignment_matrix]),
+        file_findings_json=json.dumps([f.model_dump() for f in file_findings])
     )
     db.add(assessment)
     db.flush()
@@ -146,6 +167,7 @@ def create_and_run_assessment(
             original_wording=finding.get("original_wording", ""),
             normalized_skill=finding.get("normalized_skill", ""),
             priority_type=finding.get("priority_type", "required"),
+            weight=2 if finding.get("priority_type", "required") == "required" else 1,
             resume_status=finding.get("resume_status", "not_demonstrated_in_analyzed_scope"),
             resume_explanation=finding.get("resume_explanation", ""),
             repo_status=finding.get("repo_status", "not_demonstrated_in_analyzed_scope"),

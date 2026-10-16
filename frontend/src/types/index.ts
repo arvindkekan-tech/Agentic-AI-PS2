@@ -116,6 +116,7 @@ export interface RequirementAssessment {
   original_wording: string;
   normalized_skill: string;
   priority_type: string;
+  weight?: number;
   
   resume_status: AssessmentStatus;
   resume_explanation: string;
@@ -130,6 +131,74 @@ export interface RequirementAssessment {
   improvement_action?: string;
   
   citations: Citation[];
+}
+
+export interface ScoringMetrics {
+  compatibility_score: number;
+  evidence_coverage: number;
+  evidence_match_score: number;
+  resume_alignment_score: number;
+  scoring_version: string;
+  total_requirements_count: number;
+  assessable_requirements_count: number;
+  unassessable_requirements_count: number;
+  total_weight: number;
+  assessable_weight: number;
+  demonstrated_weight: number;
+  partial_weight: number;
+  status_weights: Record<string, number>;
+  priority_weights: Record<string, number>;
+  methodology_notes: string[];
+}
+
+export interface AlignmentMatrixItem {
+  requirement_id: string;
+  normalized_skill: string;
+  priority_type: string;
+  resume_status: AssessmentStatus;
+  repo_status: AssessmentStatus;
+  combined_status: AssessmentStatus;
+  alignment_category:
+    | 'full_match'
+    | 'unverified_resume_claim'
+    | 'hidden_repo_strength'
+    | 'complete_gap'
+    | 'partial_both'
+    | 'scope_limitation';
+  category_label: string;
+  discrepancy_explanation: string;
+  resume_action_suggestion?: string;
+  repo_action_suggestion?: string;
+}
+
+export interface VerificationChecklistItem {
+  step_number: number;
+  action: string;
+  expected_artifact: string;
+  verification_criterion: string;
+}
+
+export interface ActionableRecommendation {
+  requirement_id: string;
+  normalized_skill: string;
+  priority_type: string;
+  effort_category: 'quick_win' | 'targeted_project' | 'deep_skill_build';
+  effort_label: string;
+  estimated_timeframe: string;
+  title: string;
+  description: string;
+  why_it_matters: string;
+  suggested_implementation: string;
+  verification_checklist: VerificationChecklistItem[];
+}
+
+export interface FileEvidenceFinding {
+  file_path: string;
+  finding_type: 'positive_evidence' | 'partial_evidence' | 'inconclusive';
+  associated_requirements: string[];
+  citations_count: number;
+  lines_referenced: string[];
+  summary_excerpt: string;
 }
 
 export interface Assessment {
@@ -149,6 +218,17 @@ export interface Assessment {
     not_demonstrated_in_analyzed_scope?: number;
     unable_to_assess?: number;
   };
+  
+  // Phase 2 Advanced Metrics & Intelligence
+  compatibility_score?: number;
+  evidence_coverage?: number;
+  evidence_match_score?: number;
+  resume_alignment_score?: number;
+  scoring_metadata?: ScoringMetrics;
+  recommendations?: ActionableRecommendation[];
+  alignment_matrix?: AlignmentMatrixItem[];
+  file_findings?: FileEvidenceFinding[];
+
   created_at: string;
   updated_at: string;
   job?: Job;
@@ -163,4 +243,65 @@ export interface EvidenceReport {
   total_citations: number;
   valid_citations_count: number;
   citations: Citation[];
+}
+
+export interface DiscoveredJob {
+  id: string;
+  source_id: string;
+  source_name: string;
+  title: string;
+  company: string;
+  location?: string;
+  url: string;
+  description: string;
+  tags: string[];
+  salary_range?: string;
+  published_at?: string;
+  is_remote: boolean;
+  match_score?: number;
+  matched_skills?: string[];
+  missing_skills?: string[];
+}
+
+export interface JobSourceInfo {
+  source_id: string;
+  source_name: string;
+  description: string;
+  is_active: boolean;
+  requires_api_key: boolean;
+  supported_filters: string[];
+}
+
+export interface RequirementChangeItem {
+  requirement_id: string;
+  normalized_skill: string;
+  priority_type: string;
+  previous_status?: AssessmentStatus;
+  current_status: AssessmentStatus;
+  transition_type: 'improved' | 'regressed' | 'stable' | 'new';
+  transition_label: string;
+  previous_citations_count: number;
+  current_citations_count: number;
+  explanation: string;
+}
+
+export interface AssessmentComparisonResponse {
+  current_assessment_id: string;
+  previous_assessment_id: string;
+  job_id: string;
+  job_title: string;
+  current_created_at: string;
+  previous_created_at: string;
+  current_score: number;
+  previous_score: number;
+  score_delta: number;
+  current_coverage: number;
+  previous_coverage: number;
+  coverage_delta: number;
+  improved_count: number;
+  regressed_count: number;
+  stable_count: number;
+  new_count: number;
+  requirement_changes: RequirementChangeItem[];
+  narrative_summary: string;
 }

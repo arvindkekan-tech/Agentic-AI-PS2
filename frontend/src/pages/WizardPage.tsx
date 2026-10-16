@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Briefcase,
   FileText,
@@ -18,6 +18,7 @@ import type { Job, Resume, Repository } from '../types';
 
 export const WizardPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Wizard Step: 1, 2, 3, 4
   const [step, setStep] = useState<number>(1);
@@ -43,6 +44,15 @@ export const WizardPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+
+  // Auto-advance if navigated from Job Discovery with a pre-imported job
+  useEffect(() => {
+    const state = location.state as { preselectedJob?: Job } | null;
+    if (state?.preselectedJob) {
+      setCreatedJob(state.preselectedJob);
+      setStep(2);
+    }
+  }, [location.state]);
 
   // Quick fill sample job
   const fillSampleJob = () => {

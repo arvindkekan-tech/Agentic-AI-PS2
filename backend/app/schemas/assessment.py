@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, ConfigDict
 
 from app.schemas.job import JobResponse
@@ -32,6 +32,7 @@ class RequirementAssessmentResponse(BaseModel):
     original_wording: str
     normalized_skill: str
     priority_type: str
+    weight: int = 2
     
     resume_status: str
     resume_explanation: str
@@ -68,6 +69,13 @@ class AssessmentResponse(BaseModel):
     provider_name: str
     model_name: str
     summary_counts: Dict[str, int]
+    
+    # Phase 2 Analytics
+    compatibility_score: float = 0.0
+    evidence_coverage: float = 0.0
+    evidence_match_score: float = 0.0
+    resume_alignment_score: float = 0.0
+    
     created_at: datetime
     updated_at: datetime
 
@@ -77,6 +85,12 @@ class AssessmentDetailResponse(AssessmentResponse):
     resume: Optional[ResumeResponse] = None
     repository: Optional[RepositoryResponse] = None
     requirements: List[RequirementAssessmentResponse] = []
+    
+    # Phase 2 Detailed Intelligence
+    scoring_metadata: Optional[Dict[str, Any]] = None
+    recommendations: Optional[List[Dict[str, Any]]] = None
+    alignment_matrix: Optional[List[Dict[str, Any]]] = None
+    file_findings: Optional[List[Dict[str, Any]]] = None
 
 
 class EvidenceResponse(BaseModel):
