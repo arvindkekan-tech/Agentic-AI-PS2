@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     
     # AI Provider
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_MODEL: str = "gemini-3.8-flash"
     
     # GitHub Integration
     GITHUB_TOKEN: str = ""
@@ -48,9 +48,30 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
     ]
+    CORS_ORIGIN_REGEX: str = r"^https:\/\/.*\.vercel\.app$"
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                return []
+            if v.startswith("[") and v.endswith("]"):
+                import json
+                try:
+                    return json.loads(v)
+                except Exception:
+                    pass
+            return [i.strip() for i in v.split(",") if i.strip()]
+        elif isinstance(v, (list, tuple)):
+            return list(v)
+        return []
 
     model_config = SettingsConfigDict(
         env_file=(_backend_dir / ".env", _project_root / ".env", ".env"),

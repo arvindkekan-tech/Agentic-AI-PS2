@@ -15,9 +15,106 @@ class GeminiProvider(BaseAIProvider):
     """
 
     def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
-        self.api_key = api_key or settings.GEMINI_API_KEY
-        self.model = model or settings.GEMINI_MODEL or "gemini-2.5-flash"
+        self.api_key = api_key if api_key is not None else settings.GEMINI_API_KEY
+        raw_model = model or settings.GEMINI_MODEL or "gemini-3.8-flash"
+        # Transparently map deprecated or invalid model names to supported current model
+        if "2.5" in raw_model or "2.0" in raw_model or "1.5" in raw_model:
+            self.model = "gemini-3.8-flash"
+        else:
+            self.model = raw_model
         self.endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+
+    def test_connectivity(self) -> Dict[str, Any]:
+        """
+        Minimal backend-only connectivity check.
+        Makes a lightweight 1-token request to verify credentials and model availability.
+        Never exposes the API key or raw sensitive values.
+        """
+        if not self.api_key or len(self.api_key.strip()) < 10:
+            return {
+                "configured": False,
+                "connected": False,
+                "category": "missing_credentials",
+                "detail": "GEMINI_API_KEY is not configured.",
+                "provider": "gemini",
+                "model": self.model
+            }
+
+        test_payload = {
+            "contents": [{"parts": [{"text": "Respond with OK"}]}],
+            "generationConfig": {"maxOutputTokens": 5}
+        }
+        try:
+            with httpx.Client(timeout=8.0) as client:
+                res = client.post(self.endpoint, json=test_payload)
+
+            if res.status_code == 200:
+                return {
+                    "configured": True,
+                    "connected": True,
+                    "category": "success",
+                    "detail": "Gemini API connected successfully.",
+                    "provider": "gemini",
+                    "model": self.model
+                }
+            elif res.status_code in (401, 403):
+                return {
+                    "configured": True,
+                    "connected": False,
+                    "category": "invalid_credentials",
+                    "detail": "Gemini API key is invalid or restricted.",
+                    "status_code": res.status_code,
+                    "provider": "gemini",
+                    "model": self.model
+                }
+            elif res.status_code == 404:
+                return {
+                    "configured": True,
+                    "connected": False,
+                    "category": "model_unavailable",
+                    "detail": f"Gemini model '{self.model}' is unavailable or deprecated.",
+                    "status_code": 404,
+                    "provider": "gemini",
+                    "model": self.model
+                }
+            elif res.status_code in (429, 503):
+                return {
+                    "configured": True,
+                    "connected": False,
+                    "category": "quota_or_rate_limit",
+                    "detail": "Gemini API quota or rate limit exceeded.",
+                    "status_code": res.status_code,
+                    "provider": "gemini",
+                    "model": self.model
+                }
+            else:
+                return {
+                    "configured": True,
+                    "connected": False,
+                    "category": "api_error",
+                    "detail": f"Gemini API returned status {res.status_code}.",
+                    "status_code": res.status_code,
+                    "provider": "gemini",
+                    "model": self.model
+                }
+        except httpx.TimeoutException:
+            return {
+                "configured": True,
+                "connected": False,
+                "category": "timeout",
+                "detail": "Connection to Gemini API timed out after 8 seconds.",
+                "provider": "gemini",
+                "model": self.model
+            }
+        except Exception as e:
+            return {
+                "configured": True,
+                "connected": False,
+                "category": "network_error",
+                "detail": f"Failed to connect to Gemini API: {type(e).__name__}",
+                "provider": "gemini",
+                "model": self.model
+            }
 
     def assess_requirements(
         self,
@@ -133,18 +230,24 @@ class GeminiProvider(BaseAIProvider):
                         continue
                     raise HTTPException(
                         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        detail="Gemini API rate limit exceeded. Please wait a moment and try again."
+                        detail="Gemini API rate limit or quota exceeded. Please wait a moment and try again."
                     )
-                elif response.status_code in (400, 401, 403):
+                elif response.status_code == 404:
+                    raise HTTPException(
+                        status_code=status.HTTP_502_BAD_GATEWAY,
+                        detail=f"Gemini model '{self.model}' was not found (HTTP 404). Please ensure GEMINI_MODEL is set to a supported model like 'gemini-3.8-flash'."
+                    )
+                elif response.status_code in (401, 403):
+                    error_msg = response.json().get("error", {}).get("message", "Invalid or unauthorized API key")
+                    raise HTTPException(
+                        status_code=status.HTTP_502_BAD_GATEWAY,
+                        detail=f"Gemini API authentication failed: {error_msg}"
+                    )
+                else:
                     error_msg = response.json().get("error", {}).get("message", response.text)
                     raise HTTPException(
                         status_code=status.HTTP_502_BAD_GATEWAY,
-                        detail=f"Gemini API authentication/request error: {error_msg}"
-                    )
-                else:
-                    raise HTTPException(
-                        status_code=status.HTTP_502_BAD_GATEWAY,
-                        detail=f"Gemini API returned HTTP {response.status_code}: {response.text}"
+                        detail=f"Gemini API returned HTTP {response.status_code}: {error_msg}"
                     )
 
             except httpx.TimeoutException:

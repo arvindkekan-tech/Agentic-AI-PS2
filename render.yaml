@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: proofpath-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: PROJECT_NAME
+        value: ProofPath
+      - key: SECRET_KEY
+        generateValue: true
+      - key: GEMINI_MODEL
+        value: gemini-3.8-flash
+      - key: DATABASE_URL
+        value: sqlite:///./proofpath.db

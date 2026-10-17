@@ -15,8 +15,23 @@ import type {
   KnowledgeDocument,
   KnowledgeSearchResponse
 } from '../types';
+function resolveApiBase(): string {
+  let raw = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+  if (!raw) {
+    return '/api/v1';
+  }
+  raw = raw.replace(/\/+$/, '');
+  if (!raw.endsWith('/api/v1')) {
+    if (raw.endsWith('/api')) {
+      raw = `${raw}/v1`;
+    } else {
+      raw = `${raw}/api/v1`;
+    }
+  }
+  return raw;
+}
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
+const API_BASE = resolveApiBase();
 
 class ApiClient {
   private getToken(): string | null {

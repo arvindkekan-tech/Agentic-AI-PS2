@@ -11,6 +11,7 @@ from app.models.assessment import Assessment
 from app.models.requirement import RequirementAssessment
 from app.models.citation import Citation
 from app.ai.factory import get_ai_provider
+from app.ai.deterministic_provider import DeterministicProvider
 from app.services.citation_validator import validate_and_adjust_finding
 from app.services.github_service import fetch_repository_snapshot
 
@@ -27,7 +28,7 @@ def create_and_run_assessment(
     Orchestrate full Phase 1 assessment:
     1. Verify resource ownership
     2. Extract requirements, résumé text, and repository snapshot
-    3. Execute AI provider evaluation
+    3. Execute AI provider evaluation (with automatic deterministic fallback)
     4. Deterministically validate all citations
     5. Persist assessment, requirements, citations, and summary counts
     Preserves prior successful assessments upon any pipeline error.
@@ -69,13 +70,29 @@ def create_and_run_assessment(
     # Fetch live snapshot matching the analyzed SHA or branch
     try:
         snapshot = fetch_repository_snapshot(repo_record.repo_url, repo_record.branch)
-    except HTTPException:
-        raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"GitHub repository snapshot error: {str(e)}"
-        )
+        # Fallback to stored snapshot if live GitHub API is unavailable or rate-limited
+        cached_meta = {}
+        try:
+            cached_meta = json.loads(repo_record.snapshot_metadata_json or "{}")
+        except Exception:
+            pass
+        if "files" in cached_meta and cached_meta["files"]:
+            snapshot = {
+                "owner": repo_record.owner,
+                "name": repo_record.name,
+                "repo_url": repo_record.repo_url,
+                "branch": repo_record.branch,
+                "analyzed_sha": repo_record.analyzed_sha,
+                "files": cached_meta.get("files", {})
+            }
+        else:
+            if isinstance(e, HTTPException):
+                raise e
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"GitHub repository snapshot error: {str(e)}"
+            )
 
     # 3. Choose provider and execute
     provider = get_ai_provider(force_deterministic=force_deterministic)
@@ -89,11 +106,21 @@ def create_and_run_assessment(
             repository_snapshot=snapshot
         )
     except Exception as e:
-        # If provider fails, we raise an assessment error without corrupting or overwriting earlier assessments
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Assessment engine error: {str(e)}"
-        )
+        if provider_name == "gemini":
+            # Graceful, clearly-labeled fallback to deterministic engine if Gemini fails
+            fallback_provider = DeterministicProvider()
+            raw_findings = fallback_provider.assess_requirements(
+                requirements=raw_reqs,
+                resume_text=resume.extracted_text,
+                repository_snapshot=snapshot
+            )
+            provider_name = "deterministic_fallback"
+            model_name = "rule-engine-v1 (fallback)"
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Assessment engine error: {str(e)}"
+            )
 
     # 4. Deterministic Citation Validation & Status Adjustment
     validated_findings = []

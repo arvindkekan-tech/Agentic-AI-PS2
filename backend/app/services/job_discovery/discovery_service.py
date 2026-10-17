@@ -10,11 +10,13 @@ from app.services.job_discovery.base import JobSourceAdapter, DiscoveredJob, Job
 from app.services.job_discovery.remotive_adapter import RemotiveAdapter
 from app.services.job_discovery.arbeitnow_adapter import ArbeitnowAdapter
 from app.services.job_discovery.schema_org_adapter import SchemaOrgJobAdapter
+from app.services.job_discovery.greenhouse_adapter import GreenhouseJobAdapter
 
 
 class JobDiscoveryService:
     def __init__(self):
         self.adapters: Dict[str, JobSourceAdapter] = {
+            "greenhouse": GreenhouseJobAdapter(),
             "remotive": RemotiveAdapter(),
             "arbeitnow": ArbeitnowAdapter(),
             "schema_org": SchemaOrgJobAdapter(),
@@ -49,7 +51,7 @@ class JobDiscoveryService:
         target_adapters = (
             [self.adapters[s] for s in selected_source_ids if s in self.adapters]
             if selected_source_ids
-            else [self.adapters["remotive"], self.adapters["arbeitnow"]]
+            else [self.adapters["greenhouse"], self.adapters["remotive"]]
         )
 
         for adapter in target_adapters:

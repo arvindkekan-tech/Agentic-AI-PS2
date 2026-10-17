@@ -30,7 +30,7 @@ export const JobDiscoveryPage: React.FC = () => {
   // Search & Filter state
   const [query, setQuery] = useState('Python');
   const [remoteOnly, setRemoteOnly] = useState(true);
-  const [selectedSources, setSelectedSources] = useState<string[]>(['remotive', 'arbeitnow']);
+  const [selectedSources, setSelectedSources] = useState<string[]>(['greenhouse', 'remotive', 'arbeitnow']);
 
   // Match Mode state
   const [matchMode, setMatchMode] = useState(false);

@@ -1,13 +1,25 @@
 from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel, Field, ConfigDict
+from typing import List, Optional, Any
+from pydantic import BaseModel, Field, ConfigDict, model_validator
 
 
 class InspectedFileItem(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
     path: str
-    size: int
-    lines_count: int
-    language: str
+    size: int = 0
+    lines_count: int = 0
+    language: str = "Code"
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "path" not in data and "file_path" in data:
+                data["path"] = data["file_path"]
+            if "size" not in data:
+                data["size"] = data.get("file_size", 0)
+        return data
 
 
 class ExcludedFileItem(BaseModel):
