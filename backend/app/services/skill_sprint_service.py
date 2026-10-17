@@ -1003,7 +1003,9 @@ class SkillSprintService:
         SkillSprintService.seed_question_bank(db)
         questions = (
             db.query(SkillSprintQuestion)
-            .filter(SkillSprintQuestion.skill == skill)
+            .filter(
+                (SkillSprintQuestion.skill == skill) | (SkillSprintQuestion.skill.ilike(skill))
+            )
             .order_by(SkillSprintQuestion.id)
             .limit(10)
             .all()
@@ -1048,7 +1050,9 @@ class SkillSprintService:
 
         questions = (
             db.query(SkillSprintQuestion)
-            .filter(SkillSprintQuestion.skill == skill)
+            .filter(
+                (SkillSprintQuestion.skill == skill) | (SkillSprintQuestion.skill.ilike(skill))
+            )
             .order_by(SkillSprintQuestion.id)
             .limit(10)
             .all()

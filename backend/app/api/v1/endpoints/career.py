@@ -1,7 +1,7 @@
 import json
 from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -156,6 +156,7 @@ def update_career_profile(
 # ---------------------------------------------------------
 
 @router.get("/tasks", response_model=List[ProofTaskResponse], summary="List gap-to-proof tasks")
+@router.get("/proof-tasks", response_model=List[ProofTaskResponse], include_in_schema=False)
 def get_proof_tasks(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -724,16 +725,19 @@ def evaluate_interview_answer(
 # ---------------------------------------------------------
 
 @router.get("/skill-sprint/skills", summary="List supported Skill Sprint tracks")
+@router.get("/skill-sprint/tracks", summary="List supported Skill Sprint tracks", include_in_schema=False)
 def list_skill_sprint_tracks():
     return SkillSprintService.get_supported_skills()
 
 
 @router.get("/skill-sprint/questions", response_model=List[SkillSprintQuestionOut], summary="Get sprint questions (no answers delivered)")
 def get_skill_sprint_questions(
-    skill: str,
+    skill: Optional[str] = Query(None),
+    track_id: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
-    questions = SkillSprintService.get_questions_for_skill(db, skill)
+    selected_skill = skill or track_id or "React"
+    questions = SkillSprintService.get_questions_for_skill(db, selected_skill)
     if not questions:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

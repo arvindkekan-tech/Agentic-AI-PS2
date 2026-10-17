@@ -33,8 +33,10 @@ def seed_judge_scenario(db: Session = Depends(get_db)):
             is_active=True
         )
         db.add(user)
-        db.commit()
-        db.refresh(user)
+    else:
+        user.hashed_password = hash_password("ProofPath2026!")
+    db.commit()
+    db.refresh(user)
 
     # 2. Seed Career Profile
     profile = db.query(CareerProfile).filter(CareerProfile.user_id == user.id).first()
