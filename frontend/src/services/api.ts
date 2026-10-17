@@ -9,11 +9,31 @@ import type {
   ChangeEvent,
   MonitoringStatusResponse,
   TrustReport,
-  ExtractedRequirementItem
+  ExtractedRequirementItem,
+  CareerProfile,
+  ProofTask,
+  JobApplication,
+  RoadmapMilestone,
+  MentorChatResponse,
+  InterviewQuestion,
+  InterviewEvaluation,
+  RecruiterDashboardResponse,
+  CollegeDashboardResponse,
+  SkillSprintTrack,
+  SkillSprintQuestion,
+  SkillSprintResult,
+  SkillSprintAttempt,
+  CareerProofPassport,
+  OpportunityRadar,
+  SkillProofDiff,
+  CareerWhatIf,
+  RecruiterChallenge,
+  CollegeSprintAssignment
 } from '../types';
 
-
-const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
+const API_BASE = (import.meta.env.VITE_API_URL && !import.meta.env.VITE_API_URL.includes(':8000')) 
+  ? import.meta.env.VITE_API_URL 
+  : '/api/v1';
 
 class ApiClient {
   private getToken(): string | null {
@@ -119,6 +139,10 @@ class ApiClient {
 
   async listJobs(): Promise<Job[]> {
     return this.request<Job[]>('/jobs');
+  }
+
+  async getJobs(): Promise<Job[]> {
+    return this.listJobs();
   }
 
   async getJob(id: string): Promise<Job> {
@@ -233,6 +257,231 @@ class ApiClient {
       method: 'PATCH',
       body: JSON.stringify(data)
     });
+  }
+
+  // Career Profile
+  async getCareerProfile(): Promise<CareerProfile> {
+    return this.request<CareerProfile>('/career/profile');
+  }
+
+  async updateCareerProfile(data: Partial<CareerProfile>): Promise<CareerProfile> {
+    return this.request<CareerProfile>('/career/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  // Proof Tasks (Gap-to-Proof Planner)
+  async getProofTasks(): Promise<ProofTask[]> {
+    return this.request<ProofTask[]>('/career/tasks');
+  }
+
+  async createProofTask(data: Partial<ProofTask>): Promise<ProofTask> {
+    return this.request<ProofTask>('/career/tasks', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateProofTask(taskId: string, data: { status?: string; estimated_hours?: number }): Promise<ProofTask> {
+    return this.request<ProofTask>(`/career/tasks/${taskId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async generateProofTasksFromAssessment(assessmentId: string): Promise<ProofTask[]> {
+    return this.request<ProofTask[]>(`/career/tasks/generate-from-assessment/${assessmentId}`, {
+      method: 'POST'
+    });
+  }
+
+  // Job Applications Tracker
+  async getJobApplications(): Promise<JobApplication[]> {
+    return this.request<JobApplication[]>('/career/applications');
+  }
+
+  async addJobApplication(data: Partial<JobApplication>): Promise<JobApplication> {
+    return this.request<JobApplication>('/career/applications', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateJobApplication(appId: string, data: Partial<JobApplication>): Promise<JobApplication> {
+    return this.request<JobApplication>(`/career/applications/${appId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async deleteJobApplication(appId: string): Promise<void> {
+    await this.request<void>(`/career/applications/${appId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  // Roadmap
+  async getRoadmap(): Promise<RoadmapMilestone[]> {
+    return this.request<RoadmapMilestone[]>('/career/roadmap');
+  }
+
+  // AI Career Mentor
+  async chatWithMentor(message: string, assessmentId?: string): Promise<MentorChatResponse> {
+    return this.request<MentorChatResponse>('/career/mentor/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message, assessment_id: assessmentId })
+    });
+  }
+
+  // Interview Coach
+  async getInterviewQuestions(role?: string): Promise<InterviewQuestion[]> {
+    const q = role ? `?role=${encodeURIComponent(role)}` : '';
+    return this.request<InterviewQuestion[]>(`/career/interview/questions${q}`);
+  }
+
+  async evaluateInterviewAnswer(data: {
+    role_title: string;
+    question: string;
+    question_type: string;
+    user_answer: string;
+  }): Promise<InterviewEvaluation> {
+    return this.request<InterviewEvaluation>('/career/interview/evaluate', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  // Recruiter Portal
+  async getRecruiterDashboard(): Promise<RecruiterDashboardResponse> {
+    return this.request<RecruiterDashboardResponse>('/recruiter/dashboard');
+  }
+
+  async updateCandidateStatus(candidateId: string, review_status: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/recruiter/candidates/${candidateId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ review_status })
+    });
+  }
+
+  // College T&P Portal
+  async getCollegeDashboard(): Promise<CollegeDashboardResponse> {
+    return this.request<CollegeDashboardResponse>('/college/dashboard');
+  }
+
+  // Judge Demo Seeder
+  async seedJudgeDemo(): Promise<{ status: string; message: string; target_job: string; assessment_id?: string }> {
+    return this.request<{ status: string; message: string; target_job: string; assessment_id?: string }>('/demo/seed', {
+      method: 'POST'
+    });
+  }
+
+  // ==================== SKILL SPRINT ====================
+  async getSkillSprintTracks(): Promise<SkillSprintTrack[]> {
+    return this.request<SkillSprintTrack[]>('/career/skill-sprint/skills');
+  }
+
+  async getSkillSprintQuestions(skill: string): Promise<SkillSprintQuestion[]> {
+    return this.request<SkillSprintQuestion[]>(`/career/skill-sprint/questions?skill=${encodeURIComponent(skill)}`);
+  }
+
+  async submitSkillSprint(
+    skill: string,
+    answers: Array<{ question_id: string; answer: string }>,
+    target_job_id?: string
+  ): Promise<SkillSprintResult> {
+    return this.request<SkillSprintResult>('/career/skill-sprint/submit', {
+      method: 'POST',
+      body: JSON.stringify({ skill, target_job_id, answers })
+    });
+  }
+
+  async getSkillSprintHistory(): Promise<SkillSprintAttempt[]> {
+    return this.request<SkillSprintAttempt[]>('/career/skill-sprint/history');
+  }
+
+  // ==================== CAREER PROOF PASSPORT ====================
+  async getCareerProofPassport(): Promise<CareerProofPassport> {
+    return this.request<CareerProofPassport>('/career/passport');
+  }
+
+  async updatePassportSettings(settings: {
+    is_public_shared?: boolean;
+    share_skill_sprint?: boolean;
+    allow_recruiter_challenges?: boolean;
+    authorized_recruiter_emails?: string[];
+    regenerate_token?: boolean;
+  }): Promise<any> {
+    return this.request<any>('/career/passport/settings', {
+      method: 'POST',
+      body: JSON.stringify(settings)
+    });
+  }
+
+  async getPublicPassport(shareToken: string): Promise<CareerProofPassport> {
+    return this.request<CareerProofPassport>(`/career/passport/public/${encodeURIComponent(shareToken)}`);
+  }
+
+  // ==================== OPPORTUNITY-TO-ACTION RADAR ====================
+  async getOpportunityRadar(): Promise<OpportunityRadar> {
+    return this.request<OpportunityRadar>('/career/opportunity-radar');
+  }
+
+  // ==================== SKILL PROOF DIFF ====================
+  async getAssessmentDiff(): Promise<SkillProofDiff> {
+    return this.request<SkillProofDiff>('/career/assessments/diff');
+  }
+
+  // ==================== CAREER WHAT-IF SIMULATOR ====================
+  async simulateWhatIf(currentRole: string, alternativeRole: string): Promise<CareerWhatIf> {
+    return this.request<CareerWhatIf>('/career/what-if', {
+      method: 'POST',
+      body: JSON.stringify({ current_role: currentRole, alternative_role: alternativeRole })
+    });
+  }
+
+  // ==================== RECRUITER CHALLENGES ====================
+  async getRecruiterCandidateSkillSprint(candidateId: string): Promise<any> {
+    return this.request<any>(`/recruiter/candidates/${encodeURIComponent(candidateId)}/skill-sprint`);
+  }
+
+  async createRecruiterChallenge(data: {
+    student_id: string;
+    requirement_skill: string;
+    challenge_title: string;
+    instructions: string;
+    acceptance_criteria: string;
+  }): Promise<any> {
+    return this.request<any>('/recruiter/challenges', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async getStudentChallenges(): Promise<RecruiterChallenge[]> {
+    return this.request<RecruiterChallenge[]>('/career/challenges');
+  }
+
+  async submitStudentChallenge(challengeId: string, submission_repo_url: string): Promise<any> {
+    return this.request<any>(`/career/challenges/${challengeId}/submit?submission_repo_url=${encodeURIComponent(submission_repo_url)}`, {
+      method: 'POST'
+    });
+  }
+
+  // ==================== COLLEGE SPRINT ASSIGNMENTS & EARLY WARNING ====================
+  async getCollegeSprintAssignments(): Promise<CollegeSprintAssignment[]> {
+    return this.request<CollegeSprintAssignment[]>('/college/skill-sprint/assignments');
+  }
+
+  async createCollegeSprintAssignment(data: { target_batch: string; skill: string; due_date: string }): Promise<any> {
+    return this.request<any>('/college/skill-sprint/assignments', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async getCollegeEarlyWarning(): Promise<any> {
+    return this.request<any>('/college/early-warning');
   }
 }
 

@@ -1,45 +1,69 @@
 @import "tailwindcss";
 
 @theme {
-  --color-obsidian: #111318;
-  --color-graphite: #1B1D24;
-  --color-graphite-light: #282B36;
-  --color-graphite-border: #323644;
-  --color-ivory: #F4F1E8;
-  --color-paper: #FFFEFA;
-  --color-lime: #C7F36B;
-  --color-lime-dim: #92b845;
-  --color-violet: #A99BFF;
-  --color-amber: #F3B66D;
-  --color-softred: #E77D83;
+  --color-brand-50: #EFF6FF;
+  --color-brand-100: #DBEAFE;
+  --color-brand-500: #3B82F6;
+  --color-brand-600: #2563EB;
+  --color-brand-700: #1D4ED8;
 
-  --font-headline: 'Space Grotesk', sans-serif;
-  --font-sans: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --color-surface-bg: #F8FAFC;
+  --color-surface-card: #FFFFFF;
+  --color-surface-border: #E2E8F0;
+  --color-surface-muted: #64748B;
+
+  --font-headline: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 :root {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  color-scheme: dark light;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light;
+  background-color: #F8FAFC;
+  color: #0F172A;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  background-color: #F8FAFC;
+  color: #0F172A;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Custom scrollbars */
+/* Polished subtle light scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: #111318;
+  background: #F1F5F9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #282B36;
-  border-radius: 3px;
+  background: #CBD5E1;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3B4050;
+  background: #94A3B8;
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+}
+
+.glass-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 10px 25px -3px rgba(15, 23, 42, 0.08);
 }
