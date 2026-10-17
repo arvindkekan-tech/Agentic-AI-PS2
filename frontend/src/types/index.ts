@@ -1,0 +1,420 @@
+export interface User {
+  id: string;
+  email: string;
+  full_name?: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: User;
+}
+
+export interface ExtractedRequirementItem {
+  id: string;
+  original_wording: string;
+  normalized_skill: string;
+  priority_type: string; // 'required' | 'preferred'
+}
+
+export interface Job {
+  id: string;
+  user_id: string;
+  title: string;
+  company?: string;
+  source_type: 'pasted' | 'url';
+  source_url?: string;
+  raw_text: string;
+  extracted_requirements: ExtractedRequirementItem[];
+  created_at: string;
+}
+
+export interface Resume {
+  id: string;
+  user_id: string;
+  filename: string;
+  file_size: number;
+  mime_type: string;
+  word_count: number;
+  char_count: number;
+  preview_text: string;
+  metadata: Record<string, any>;
+  created_at: string;
+  extracted_text?: string;
+}
+
+export interface InspectedFileItem {
+  path: string;
+  size: number;
+  lines_count: number;
+  language: string;
+}
+
+export interface ExcludedFileItem {
+  path: string;
+  reason: string;
+}
+
+export interface SnapshotCoverage {
+  inspected_files_count: number;
+  excluded_files_count: number;
+  total_files_count: number;
+  inspected_lines_total: number;
+  languages_detected: string[];
+  limitations: string[];
+}
+
+export interface Repository {
+  id: string;
+  user_id: string;
+  repo_url: string;
+  owner: string;
+  name: string;
+  branch: string;
+  analyzed_sha: string;
+  inspected_files_count: number;
+  total_files_count: number;
+  inspected_files: InspectedFileItem[];
+  excluded_files: ExcludedFileItem[];
+  coverage: SnapshotCoverage;
+  created_at: string;
+}
+
+export type AssessmentStatus =
+  | 'demonstrated'
+  | 'partial_or_needs_review'
+  | 'not_demonstrated_in_analyzed_scope'
+  | 'unable_to_assess';
+
+export type EvidenceType =
+  | 'implementation'
+  | 'test_code'
+  | 'configuration'
+  | 'documentation'
+  | 'resume_claim';
+
+export interface Citation {
+  id: string;
+  evidence_type: EvidenceType;
+  repo_url?: string;
+  branch?: string;
+  commit_sha?: string;
+  file_path?: string;
+  start_line?: number;
+  end_line?: number;
+  excerpt: string;
+  commit_url?: string;
+  is_valid: boolean;
+  validation_note: string;
+}
+
+export interface RequirementAssessment {
+  id: string;
+  requirement_id: string;
+  original_wording: string;
+  normalized_skill: string;
+  priority_type: string;
+  weight?: number;
+  
+  resume_status: AssessmentStatus;
+  resume_explanation: string;
+  
+  repo_status: AssessmentStatus;
+  repo_explanation: string;
+  
+  combined_status: AssessmentStatus;
+  combined_interpretation: string;
+  
+  limitations_note: string;
+  improvement_action?: string;
+  
+  citations: Citation[];
+}
+
+export interface ScoringMetrics {
+  compatibility_score: number;
+  evidence_coverage: number;
+  evidence_match_score: number;
+  resume_alignment_score: number;
+  scoring_version: string;
+  total_requirements_count: number;
+  assessable_requirements_count: number;
+  unassessable_requirements_count: number;
+  total_weight: number;
+  assessable_weight: number;
+  demonstrated_weight: number;
+  partial_weight: number;
+  status_weights: Record<string, number>;
+  priority_weights: Record<string, number>;
+  methodology_notes: string[];
+}
+
+export interface AlignmentMatrixItem {
+  requirement_id: string;
+  normalized_skill: string;
+  priority_type: string;
+  resume_status: AssessmentStatus;
+  repo_status: AssessmentStatus;
+  combined_status: AssessmentStatus;
+  alignment_category:
+    | 'full_match'
+    | 'unverified_resume_claim'
+    | 'hidden_repo_strength'
+    | 'complete_gap'
+    | 'partial_both'
+    | 'scope_limitation';
+  category_label: string;
+  discrepancy_explanation: string;
+  resume_action_suggestion?: string;
+  repo_action_suggestion?: string;
+}
+
+export interface VerificationChecklistItem {
+  step_number: number;
+  action: string;
+  expected_artifact: string;
+  verification_criterion: string;
+}
+
+export interface LearningResourceItem {
+  title: string;
+  source_url?: string;
+  url?: string;
+  cited_excerpt?: string;
+  excerpt?: string;
+}
+
+export interface ActionableRecommendation {
+  requirement_id: string;
+  normalized_skill: string;
+  priority_type: string;
+  effort_category: 'quick_win' | 'targeted_project' | 'deep_skill_build';
+  effort_label: string;
+  estimated_timeframe: string;
+  title: string;
+  description: string;
+  why_it_matters: string;
+  suggested_implementation: string;
+  verification_checklist: VerificationChecklistItem[];
+  learning_resources?: LearningResourceItem[];
+}
+
+export interface FileEvidenceFinding {
+  file_path: string;
+  finding_type: 'positive_evidence' | 'partial_evidence' | 'inconclusive';
+  associated_requirements: string[];
+  citations_count: number;
+  lines_referenced: string[];
+  summary_excerpt: string;
+}
+
+export interface Assessment {
+  id: string;
+  user_id: string;
+  job_id: string;
+  resume_id: string;
+  repository_id: string;
+  status: AssessmentStatus;
+  processing_status: 'queued' | 'running' | 'completed' | 'failed' | 'stale';
+  error_message?: string;
+  provider_name: string;
+  model_name: string;
+  summary_counts: {
+    demonstrated?: number;
+    partial_or_needs_review?: number;
+    not_demonstrated_in_analyzed_scope?: number;
+    unable_to_assess?: number;
+  };
+  
+  // Phase 2 Advanced Metrics & Intelligence
+  compatibility_score?: number;
+  evidence_coverage?: number;
+  evidence_match_score?: number;
+  resume_alignment_score?: number;
+  scoring_metadata?: ScoringMetrics;
+  recommendations?: ActionableRecommendation[];
+  alignment_matrix?: AlignmentMatrixItem[];
+  file_findings?: FileEvidenceFinding[];
+
+  created_at: string;
+  updated_at: string;
+  job?: Job;
+  resume?: Resume;
+  repository?: Repository;
+  requirements?: RequirementAssessment[];
+}
+
+export interface EvidenceReport {
+  assessment_id: string;
+  analyzed_sha: string;
+  total_citations: number;
+  valid_citations_count: number;
+  citations: Citation[];
+}
+
+export interface DiscoveredJob {
+  id: string;
+  source_id: string;
+  source_name: string;
+  title: string;
+  company: string;
+  location?: string;
+  url: string;
+  description: string;
+  tags: string[];
+  salary_range?: string;
+  published_at?: string;
+  is_remote: boolean;
+  match_score?: number;
+  matched_skills?: string[];
+  missing_skills?: string[];
+}
+
+export interface JobSourceInfo {
+  source_id: string;
+  source_name: string;
+  description: string;
+  is_active: boolean;
+  requires_api_key: boolean;
+  supported_filters: string[];
+}
+
+export interface RequirementChangeItem {
+  requirement_id: string;
+  normalized_skill: string;
+  priority_type: string;
+  previous_status?: AssessmentStatus;
+  current_status: AssessmentStatus;
+  transition_type: 'improved' | 'regressed' | 'stable' | 'new';
+  transition_label: string;
+  previous_citations_count: number;
+  current_citations_count: number;
+  explanation: string;
+}
+
+export interface AssessmentComparisonResponse {
+  current_assessment_id: string;
+  previous_assessment_id: string;
+  job_id: string;
+  job_title: string;
+  current_created_at: string;
+  previous_created_at: string;
+  current_score: number;
+  previous_score: number;
+  score_delta: number;
+  current_coverage: number;
+  previous_coverage: number;
+  coverage_delta: number;
+  improved_count: number;
+  regressed_count: number;
+  stable_count: number;
+  new_count: number;
+  requirement_changes: RequirementChangeItem[];
+  narrative_summary: string;
+}
+
+export interface QuestionOptionItem {
+  key: string;
+  text: string;
+}
+
+export interface QuizQuestionClient {
+  id: string;
+  requirement_id: string;
+  skill_name: string;
+  question_type: 'mcq' | 'written';
+  difficulty: string;
+  question_text: string;
+  options: QuestionOptionItem[];
+  points: number;
+  order_index: number;
+}
+
+export interface QuizClient {
+  id: string;
+  assessment_id: string;
+  title: string;
+  description: string;
+  total_questions: number;
+  total_points: number;
+  created_at: string;
+  questions: QuizQuestionClient[];
+}
+
+export interface QuestionAnswerSubmission {
+  question_id: string;
+  answer_text: string;
+}
+
+export interface QuizSubmitRequest {
+  quiz_id: string;
+  answers: QuestionAnswerSubmission[];
+}
+
+export interface QuestionResultItem {
+  question_id: string;
+  requirement_id: string;
+  skill_name: string;
+  question_type: string;
+  question_text: string;
+  user_answer: string;
+  correct_answer?: string;
+  is_correct?: boolean;
+  score_awarded: number;
+  max_points: number;
+  explanation: string;
+  evaluation_feedback: string;
+  rubric_breakdown: Record<string, any>;
+}
+
+export interface SkillObservationItem {
+  skill: string;
+  score: number;
+  max_score: number;
+  percentage: number;
+  status: string;
+}
+
+export interface QuizAttemptResult {
+  id: string;
+  quiz_id: string;
+  assessment_id: string;
+  total_score: number;
+  max_score: number;
+  percentage: number;
+  passed: boolean;
+  mcq_score: number;
+  written_score: number;
+  feedback_summary: string;
+  skill_observations: SkillObservationItem[];
+  submitted_at: string;
+  answers: QuestionResultItem[];
+  recommended_next_steps: string[];
+}
+
+export interface KnowledgeDocument {
+  id: string;
+  title: string;
+  source_url?: string;
+  source_type: string;
+  content_hash: string;
+  chunks_count: number;
+  created_at: string;
+}
+
+export interface KnowledgeChunkItem {
+  id: string;
+  document_id: string;
+  chunk_index: number;
+  chunk_text: string;
+  metadata: Record<string, any>;
+  relevance_score?: number;
+}
+
+export interface KnowledgeSearchResponse {
+  query: string;
+  total_results: number;
+  results: KnowledgeChunkItem[];
+}
