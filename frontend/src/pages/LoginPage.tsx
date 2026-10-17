@@ -31,11 +31,6 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const fillDemoAccount = () => {
-    setEmail('demo@proofpath.dev');
-    setPassword('ProofPath2026!');
-  };
-
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-4 bg-[#111318]">
       <div className="max-w-md w-full bg-[#1B1D24] border border-[#282B36] rounded-2xl p-8 shadow-2xl">
@@ -111,18 +106,6 @@ export const LoginPage: React.FC = () => {
             )}
           </button>
         </form>
-
-        {/* Demo Quick-Fill helper */}
-        <div className="mt-6 pt-5 border-t border-[#282B36] text-center">
-          <p className="text-xs text-[#9A9FB1] mb-2 font-mono">Testing locally?</p>
-          <button
-            type="button"
-            onClick={fillDemoAccount}
-            className="text-xs text-[#C7F36B] hover:underline font-mono bg-[#111318] px-3 py-1.5 rounded-lg border border-[#282B36]"
-          >
-            Fill Demo Credentials
-          </button>
-        </div>
 
         <div className="mt-6 text-center text-xs text-[#9A9FB1]">
           Don't have an account yet?{' '}

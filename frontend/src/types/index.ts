@@ -2,6 +2,7 @@ export interface User {
   id: string;
   email: string;
   full_name?: string;
+  role: 'student' | 'recruiter' | 'college_tp' | string;
   is_active: boolean;
   created_at: string;
 }
@@ -43,6 +44,24 @@ export interface Resume {
   metadata: Record<string, any>;
   created_at: string;
   extracted_text?: string;
+}
+
+export interface ParsedResumeProfile {
+  name?: string;
+  headline?: string;
+  target_role?: string;
+  bio?: string;
+  email?: string;
+  phone?: string;
+  github_username?: string;
+  skills: Array<{ name: string; level: string; category: string }>;
+  education: Array<{ degree: string; institution: string; year: string }>;
+  preferred_locations?: string[];
+}
+
+export interface ResumeUploadParseResponse {
+  resume: Resume;
+  parsed_profile: ParsedResumeProfile;
 }
 
 export interface InspectedFileItem {

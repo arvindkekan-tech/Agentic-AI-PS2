@@ -9,10 +9,12 @@ import {
   Sparkles,
   ExternalLink,
   Info,
-  Briefcase
+  Briefcase,
+  Upload,
+  Loader2
 } from 'lucide-react';
 import { api } from '../services/api';
-import type { Assessment, Job } from '../types';
+import type { Assessment, Job, CareerProfile } from '../types';
 
 interface ResumeBullet {
   id: string;
@@ -29,12 +31,16 @@ interface ResumeBullet {
 export const ResumeStudioPage: React.FC = () => {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
+  const [profile, setProfile] = useState<CareerProfile | null>(null);
   const [copied, setCopied] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Resume state
-  const [candidateName, setCandidateName] = useState('Arvind Kekan');
-  const [headline, setHeadline] = useState('Full-Stack Platform Engineer | Distributed Systems & High-Reliability APIs');
-  const [contactInfo, setContactInfo] = useState('Bengaluru, India · arvindkekan@gmail.com · github.com/arvindkekan-tech');
+  const [candidateName, setCandidateName] = useState('Ananya Sharma');
+  const [headline, setHeadline] = useState('Junior Full-Stack Developer | Python, React & REST APIs');
+  const [contactInfo, setContactInfo] = useState('Bengaluru, India · ananya@example.com · github.com/ananya-dev');
 
   const [bullets, setBullets] = useState<ResumeBullet[]>([
     {
@@ -90,18 +96,59 @@ export const ResumeStudioPage: React.FC = () => {
   ]);
 
   useEffect(() => {
-    loadAssessments();
+    loadData();
   }, []);
 
-  const loadAssessments = async () => {
+  const loadData = async () => {
     try {
-      const list = await api.listAssessments();
+      const [list, prof] = await Promise.all([
+        api.listAssessments().catch(() => []),
+        api.getCareerProfile().catch(() => null)
+      ]);
       setAssessments(list);
       if (list.length > 0) {
         setSelectedAssessment(list[0]);
       }
+      if (prof) {
+        setProfile(prof);
+        if (prof.headline) setHeadline(prof.headline);
+        if (prof.target_role && !prof.headline) setHeadline(prof.target_role);
+      }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleUploadResumeFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError(null);
+    setUploadMessage(null);
+
+    try {
+      const res = await api.uploadAndParseResume(file);
+      const parsed = res.parsed_profile;
+      if (parsed.name) setCandidateName(parsed.name);
+      if (parsed.headline) setHeadline(parsed.headline);
+      if (parsed.email || parsed.github_username) {
+        setContactInfo(`${parsed.email || 'email@example.com'} • github.com/${parsed.github_username || 'candidate'}`);
+      }
+      // Save profile
+      await api.updateCareerProfile({
+        headline: parsed.headline || headline,
+        target_role: parsed.target_role || 'Full-Stack Platform Engineer',
+        github_username: parsed.github_username,
+        skills: parsed.skills.map((s) => ({ name: s.name, level: s.level, verified: false })),
+        education: parsed.education.map((e) => ({ degree: e.degree, institution: e.institution, year: e.year, gpa: '' }))
+      });
+      setUploadMessage(`Successfully parsed "${file.name}" and saved to Career Profile!`);
+      setTimeout(() => setUploadMessage(null), 4000);
+    } catch (err: any) {
+      setUploadError(err.message || 'Failed to upload and parse résumé PDF.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -161,6 +208,27 @@ ${bullets.map((b) => `- ${b.text}${b.citation ? ` [Verified in ${b.citation.file
           </div>
 
           <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold border border-blue-200 cursor-pointer shadow-xs transition-colors">
+              {uploading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                  <span>Parsing...</span>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Upload PDF Résumé</span>
+                </>
+              )}
+              <input
+                type="file"
+                accept=".pdf,.docx"
+                disabled={uploading}
+                onChange={handleUploadResumeFile}
+                className="hidden"
+              />
+            </label>
+
             <button
               onClick={handleCopyMarkdown}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-xs transition-colors"
@@ -177,6 +245,20 @@ ${bullets.map((b) => `- ${b.text}${b.citation ? ` [Verified in ${b.citation.file
             </button>
           </div>
         </div>
+
+        {uploadMessage && (
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span>{uploadMessage}</span>
+          </div>
+        )}
+
+        {uploadError && (
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-rose-600" />
+            <span>{uploadError}</span>
+          </div>
+        )}
 
         {/* Evidence Audit Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

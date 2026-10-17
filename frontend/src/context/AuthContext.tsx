@@ -7,6 +7,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   register: (email: string, pass: string, name?: string) => Promise<void>;
+  switchRole: (role: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -51,13 +52,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(res.user);
   };
 
+  const switchRole = async (role: string) => {
+    const updatedUser = await api.updateUserRole(role);
+    setUser(updatedUser);
+  };
+
   const logout = () => {
     api.clearToken();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, switchRole, logout }}>
       {children}
     </AuthContext.Provider>
   );

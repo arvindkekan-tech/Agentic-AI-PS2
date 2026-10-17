@@ -85,3 +85,95 @@ def test_resume_ownership_isolation(client, auth_headers, second_auth_headers):
     # User 2 tries to fetch resume 1
     res3 = client.get(f"/api/v1/resumes/{resume1_id}", headers=second_auth_headers)
     assert res3.status_code == 404
+
+
+def generate_valid_test_pdf_bytes() -> bytes:
+    parts = [
+        b'%PDF-1.4\n',
+        b'1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n',
+        b'2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n',
+        b'3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n',
+        b'4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n',
+    ]
+    stream_content = (
+        b'BT\n/F1 12 Tf\n50 700 Td\n'
+        b'(Arvind Sharma - Full-Stack Platform Engineer) Tj\n0 -20 Td\n'
+        b'(Email: arvind@example.com - github.com/arvindsharma) Tj\n0 -20 Td\n'
+        b'(Skills: Python, FastAPI, React, TypeScript, SQL, Docker, Automated Testing) Tj\n0 -20 Td\n'
+        b'(Education: Bachelor of Technology from National Institute of Technology, 2024) Tj\nET\n'
+    )
+    obj5 = b'5 0 obj\n<< /Length ' + str(len(stream_content)).encode() + b' >>\nstream\n' + stream_content + b'endstream\nendobj\n'
+    parts.append(obj5)
+
+    offsets = [0]
+    cur = len(parts[0])
+    for p in parts[1:]:
+        offsets.append(cur)
+        cur += len(p)
+
+    xref = b'xref\n0 6\n0000000000 65535 f \n'
+    for off in offsets[1:]:
+        xref += f'{off:010d} 00000 n \n'.encode()
+
+    trailer = b'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + str(cur).encode() + b'\n%%EOF\n'
+    return b''.join(parts) + xref + trailer
+
+
+def test_upload_valid_pdf_and_parse_structured_profile(client, auth_headers):
+    pdf_bytes = generate_valid_test_pdf_bytes()
+    files = {
+        "file": ("candidate_resume.pdf", pdf_bytes, "application/pdf")
+    }
+    res = client.post("/api/v1/resumes/upload-and-parse", headers=auth_headers, files=files)
+    assert res.status_code == 201
+    data = res.json()
+    assert "resume" in data
+    assert "parsed_profile" in data
+    profile = data["parsed_profile"]
+    assert profile["name"] == "Arvind Sharma"
+    assert profile["email"] == "arvind@example.com"
+    assert profile["github_username"] == "arvindsharma"
+    skill_names = [s["name"] for s in profile["skills"]]
+    assert "Python" in skill_names
+    assert "React" in skill_names
+    assert "FastAPI" in skill_names
+
+
+def test_upload_pdf_missing_magic_bytes_fails(client, auth_headers):
+    # Spoofed PDF file with invalid header
+    corrupt_bytes = b"NOT_A_REAL_PDF_STREAM_1234567890"
+    files = {
+        "file": ("spoofed.pdf", corrupt_bytes, "application/pdf")
+    }
+    res = client.post("/api/v1/resumes", headers=auth_headers, files=files)
+    assert res.status_code == 400
+    assert "missing the standard %pdf header" in res.json()["detail"].lower()
+
+
+def test_upload_pdf_dangerous_script_rejected(client, auth_headers):
+    # PDF containing dangerous executable triggers
+    unsafe_bytes = b"%PDF-1.4\n1 0 obj<</Type/Action/S/JavaScript/JS (app.alert('exploit'))>>endobj\n%%EOF"
+    files = {
+        "file": ("unsafe.pdf", unsafe_bytes, "application/pdf")
+    }
+    res = client.post("/api/v1/resumes", headers=auth_headers, files=files)
+    assert res.status_code == 400
+    assert "potentially unsafe embedded scripts" in res.json()["detail"].lower()
+
+
+def test_upload_scanned_image_only_pdf_explains_ocr_unavailable(client, auth_headers):
+    # PDF with blank/image-only page without text layer
+    writer = PdfWriter()
+    writer.add_blank_page(width=612, height=792)
+    buffer = io.BytesIO()
+    writer.write(buffer)
+    scanned_bytes = buffer.getvalue()
+
+    files = {
+        "file": ("scanned_document.pdf", scanned_bytes, "application/pdf")
+    }
+    res = client.post("/api/v1/resumes", headers=auth_headers, files=files)
+    assert res.status_code == 400
+    detail = res.json()["detail"]
+    assert "scanned or image-only" in detail.lower()
+    assert "ocr extraction is currently unavailable" in detail.lower()

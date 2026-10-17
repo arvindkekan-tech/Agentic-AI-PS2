@@ -6,9 +6,9 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.user import User
 from app.models.resume import Resume
-from app.schemas.resume import ResumeResponse, ResumeDetailResponse
+from app.schemas.resume import ResumeResponse, ResumeDetailResponse, ResumeUploadParseResponse, ParsedResumeProfile
 from app.services.auth_service import get_current_user
-from app.services.resume_service import process_resume_upload
+from app.services.resume_service import process_resume_upload, extract_structured_profile
 
 router = APIRouter(prefix="/resumes", tags=["Résumés"])
 
@@ -64,6 +64,43 @@ async def upload_resume(
     db.refresh(resume)
 
     return format_resume_response(resume)
+
+
+@router.post("/upload-and-parse", response_model=ResumeUploadParseResponse, status_code=status.HTTP_201_CREATED, summary="Upload résumé and parse candidate profile for confirmation")
+async def upload_and_parse_resume(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Upload real PDF/DOCX résumé, validate bytes and structure, extract text safely,
+    parse candidate name, skills, target role, education, and links for student confirmation.
+    """
+    extracted_text, metadata, safe_path, file_size, mime_type = process_resume_upload(
+        user_id=current_user.id,
+        file=file
+    )
+
+    resume = Resume(
+        user_id=current_user.id,
+        filename=file.filename or "resume.pdf",
+        safe_path=safe_path,
+        file_size=file_size,
+        mime_type=mime_type,
+        extracted_text=extracted_text,
+        metadata_json=json.dumps(metadata)
+    )
+    db.add(resume)
+    db.commit()
+    db.refresh(resume)
+
+    parsed_data = extract_structured_profile(extracted_text)
+    parsed_profile = ParsedResumeProfile(**parsed_data)
+
+    return ResumeUploadParseResponse(
+        resume=format_resume_response(resume),
+        parsed_profile=parsed_profile
+    )
 
 
 @router.get("", response_model=List[ResumeResponse], summary="List all résumés for current user")

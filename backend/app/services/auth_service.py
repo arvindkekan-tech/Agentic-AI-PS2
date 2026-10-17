@@ -31,7 +31,8 @@ def register_user(db: Session, user_in: UserCreate) -> User:
     user = User(
         email=user_in.email.lower().strip(),
         hashed_password=hashed,
-        full_name=user_in.full_name
+        full_name=user_in.full_name,
+        role=user_in.role or "student"
     )
     db.add(user)
     db.commit()

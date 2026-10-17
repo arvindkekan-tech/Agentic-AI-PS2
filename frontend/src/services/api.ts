@@ -28,7 +28,8 @@ import type {
   SkillProofDiff,
   CareerWhatIf,
   RecruiterChallenge,
-  CollegeSprintAssignment
+  CollegeSprintAssignment,
+  ResumeUploadParseResponse
 } from '../types';
 
 const API_BASE = (import.meta.env.VITE_API_URL && !import.meta.env.VITE_API_URL.includes(':8000')) 
@@ -123,6 +124,13 @@ class ApiClient {
     return this.request<User>('/auth/me');
   }
 
+  async updateUserRole(role: string): Promise<User> {
+    return this.request<User>('/auth/role', {
+      method: 'PUT',
+      body: JSON.stringify({ role })
+    });
+  }
+
   // Jobs
   async importJob(data: {
     source_type: 'pasted' | 'url';
@@ -164,6 +172,15 @@ class ApiClient {
     const formData = new FormData();
     formData.append('file', file);
     return this.request<Resume>('/resumes', {
+      method: 'POST',
+      body: formData
+    });
+  }
+
+  async uploadAndParseResume(file: File): Promise<ResumeUploadParseResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.request<ResumeUploadParseResponse>('/resumes/upload-and-parse', {
       method: 'POST',
       body: formData
     });

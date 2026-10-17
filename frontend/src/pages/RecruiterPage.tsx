@@ -169,17 +169,28 @@ export const RecruiterPage: React.FC = () => {
               Candidate Audit Pipeline
             </div>
             <div className="divide-y divide-slate-100">
-              {filteredCandidates.map((c) => {
-                const isSelected = selectedCandidate?.id === c.id;
+              {filteredCandidates.length === 0 ? (
+                <div className="p-12 text-center text-xs text-slate-500 space-y-2">
+                  <Users className="w-8 h-8 text-slate-300 mx-auto" />
+                  <p className="font-semibold text-slate-700">No authorized candidate profiles found</p>
+                  <p className="text-[11px] text-slate-400">
+                    {searchTerm
+                      ? `No candidates match "${searchTerm}". Try clearing your search.`
+                      : 'When students complete assessments and grant recruiter access, verified candidate profiles will appear here.'}
+                  </p>
+                </div>
+              ) : (
+                filteredCandidates.map((c) => {
+                  const isSelected = selectedCandidate?.id === c.id;
 
-                return (
-                  <div
-                    key={c.id}
-                    onClick={() => setSelectedCandidate(c)}
-                    className={`p-4 flex items-center justify-between gap-4 cursor-pointer transition-colors ${
-                      isSelected ? 'bg-blue-50/70 border-l-4 border-l-blue-600' : 'hover:bg-slate-50'
-                    }`}
-                  >
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => setSelectedCandidate(c)}
+                      className={`p-4 flex items-center justify-between gap-4 cursor-pointer transition-colors ${
+                        isSelected ? 'bg-blue-50/70 border-l-4 border-l-blue-600' : 'hover:bg-slate-50'
+                      }`}
+                    >
                     <div className="min-w-0 space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-xs text-slate-900">{c.name}</span>
@@ -219,9 +230,10 @@ export const RecruiterPage: React.FC = () => {
                     </div>
                   </div>
                 );
-              })}
-            </div>
+              })
+            )}
           </div>
+        </div>
 
           {/* Selected Candidate Audit Drawer (5 cols) */}
           <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">

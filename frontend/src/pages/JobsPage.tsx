@@ -90,42 +90,72 @@ export const JobsPage: React.FC = () => {
         {/* Job Listings Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-6 space-y-3">
-            {filteredJobs.map((j) => {
-              const isSelected = selectedJob?.id === j.id;
+            {filteredJobs.length === 0 ? (
+              <div className="p-10 rounded-2xl bg-white border border-slate-200 text-center shadow-sm space-y-3">
+                <Briefcase className="w-10 h-10 text-slate-300 mx-auto" />
+                <h3 className="text-sm font-bold text-slate-800">
+                  {searchTerm ? 'No Matching Job Opportunities Found' : 'No Saved Job Opportunities'}
+                </h3>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+                  {searchTerm
+                    ? `No job listings matched "${searchTerm}". Try broadening your search terms or clearing the search filter.`
+                    : 'Import a target job posting from a public URL or paste requirements to start evaluating your code citations.'}
+                </p>
+                {searchTerm ? (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="px-3.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    Clear Search Filter
+                  </button>
+                ) : (
+                  <Link
+                    to="/wizard"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold text-xs shadow-sm hover:bg-blue-700 transition-colors"
+                  >
+                    <PlusCircle className="w-4 h-4" />
+                    <span>Import Target Job</span>
+                  </Link>
+                )}
+              </div>
+            ) : (
+              filteredJobs.map((j) => {
+                const isSelected = selectedJob?.id === j.id;
 
-              return (
-                <div
-                  key={j.id}
-                  onClick={() => setSelectedJob(j)}
-                  className={`p-5 rounded-2xl bg-white border cursor-pointer transition-all shadow-sm ${
-                    isSelected
-                      ? 'border-blue-600 ring-2 ring-blue-500/10'
-                      : 'border-slate-200 hover:border-slate-300'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-slate-900">{j.title}</span>
+                return (
+                  <div
+                    key={j.id}
+                    onClick={() => setSelectedJob(j)}
+                    className={`p-5 rounded-2xl bg-white border cursor-pointer transition-all shadow-sm ${
+                      isSelected
+                        ? 'border-blue-600 ring-2 ring-blue-500/10'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-sm text-slate-900">{j.title}</span>
+                        </div>
+                        <div className="text-xs text-slate-500 flex items-center gap-2 mt-1">
+                          <span className="font-semibold text-slate-700">{j.company || 'Enterprise Partner'}</span>
+                          <span>•</span>
+                          <span>{j.source_type === 'url' ? 'Verified URL' : 'Pasted Text'}</span>
+                        </div>
                       </div>
-                      <div className="text-xs text-slate-500 flex items-center gap-2 mt-1">
-                        <span className="font-semibold text-slate-700">{j.company || 'Enterprise Partner'}</span>
-                        <span>•</span>
-                        <span>{j.source_type === 'url' ? 'Verified URL' : 'Pasted Text'}</span>
-                      </div>
+
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold">
+                        {j.extracted_requirements?.length || 4} criteria
+                      </span>
                     </div>
 
-                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold">
-                      {j.extracted_requirements?.length || 4} criteria
-                    </span>
+                    <p className="text-xs text-slate-600 mt-2 line-clamp-2 leading-relaxed">
+                      {j.raw_text}
+                    </p>
                   </div>
-
-                  <p className="text-xs text-slate-600 mt-2 line-clamp-2 leading-relaxed">
-                    {j.raw_text}
-                  </p>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
 
           {/* Job Details Drawer */}

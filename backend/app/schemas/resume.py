@@ -20,3 +20,21 @@ class ResumeResponse(BaseModel):
 
 class ResumeDetailResponse(ResumeResponse):
     extracted_text: str
+
+
+class ParsedResumeProfile(BaseModel):
+    name: Optional[str] = None
+    headline: Optional[str] = None
+    target_role: Optional[str] = None
+    bio: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    github_username: Optional[str] = None
+    skills: list[Dict[str, Any]] = []
+    education: list[Dict[str, Any]] = []
+    preferred_locations: list[str] = []
+
+
+class ResumeUploadParseResponse(BaseModel):
+    resume: ResumeResponse
+    parsed_profile: ParsedResumeProfile

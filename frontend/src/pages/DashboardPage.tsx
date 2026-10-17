@@ -61,18 +61,6 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  const handleSeedDemo = async () => {
-    try {
-      setSeeding(true);
-      await api.seedJudgeDemo();
-      await loadDashboardData();
-    } catch (err) {
-      console.error('Failed to seed demo:', err);
-    } finally {
-      setSeeding(false);
-    }
-  };
-
   const handleCopyShareLink = (id: string) => {
     const url = `${window.location.origin}/shared/assessments/${id}`;
     navigator.clipboard.writeText(url);
@@ -92,10 +80,16 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  // Derive metrics
+  // Derive metrics purely from actual records
   const latestAssessment = assessments.length > 0 ? assessments[0] : null;
-  const verifiedCitations = latestAssessment?.summary_counts?.demonstrated ? latestAssessment.summary_counts.demonstrated * 2 : 8;
-  const matchRate = latestAssessment?.status === 'demonstrated' ? 91 : (tasks.length > 0 ? 86 : 74);
+  const demonstratedCount = latestAssessment?.summary_counts?.demonstrated || 0;
+  const totalCount = latestAssessment ? (
+    (latestAssessment.summary_counts?.demonstrated || 0) +
+    (latestAssessment.summary_counts?.partial_or_needs_review || 0) +
+    (latestAssessment.summary_counts?.not_demonstrated_in_analyzed_scope || 0)
+  ) : 0;
+  const matchRate = totalCount > 0 ? Math.round((demonstratedCount / totalCount) * 100) : 0;
+  const verifiedCitations = demonstratedCount > 0 ? demonstratedCount * 2 : 0;
   const activeTasks = tasks.filter((t) => t.status !== 'completed' && t.status !== 'dismissed');
 
   return (
@@ -105,9 +99,9 @@ export const DashboardPage: React.FC = () => {
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 text-xs font-mono text-blue-600 font-semibold uppercase tracking-wider mb-1.5">
-              <span>Kurukshetra 2026 AI Career Coach</span>
+              <span>ProofPath Career Intelligence</span>
               <span>•</span>
-              <span className="text-slate-500 font-normal">Candidate: {user?.email}</span>
+              <span className="text-slate-500 font-normal">{user?.email}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
               Career Readiness Workspace
@@ -118,18 +112,13 @@ export const DashboardPage: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <button
-              onClick={handleSeedDemo}
-              disabled={seeding}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-xs transition-colors border border-blue-200"
+            <Link
+              to="/jobs"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs transition-colors border border-slate-200"
             >
-              {seeding ? (
-                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-              ) : (
-                <Sparkles className="w-4 h-4 text-blue-600" />
-              )}
-              <span>{seeding ? 'Seeding...' : 'Reset Judge Scenario'}</span>
-            </button>
+              <Briefcase className="w-4 h-4 text-blue-600" />
+              <span>Find Jobs</span>
+            </Link>
 
             <Link
               to="/sprint"
@@ -149,10 +138,10 @@ export const DashboardPage: React.FC = () => {
 
             <Link
               to="/wizard"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold text-xs transition-colors shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-sm"
             >
               <PlusCircle className="w-4 h-4" />
-              <span>Assess New Repo</span>
+              <span>New Assessment</span>
             </Link>
           </div>
         </div>
@@ -241,18 +230,18 @@ export const DashboardPage: React.FC = () => {
           </div>
         ) : (
           <div className="p-8 rounded-2xl bg-white border border-slate-200 text-center shadow-sm">
-            <Sparkles className="w-10 h-10 text-blue-600 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-900">Welcome to ProofPath AI Career Coach!</h3>
+            <ShieldCheck className="w-10 h-10 text-blue-600 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-slate-900">No Assessment Recorded Yet</h3>
             <p className="text-xs text-slate-600 max-w-md mx-auto mt-1 mb-4 leading-relaxed">
-              Load the complete Kurukshetra 2026 Judge Demonstration scenario to instantly explore verified code citations, proof tasks, and recruiter workflows.
+              Upload your résumé and target job criteria to triangulate verified code evidence against real engineering requirements.
             </p>
-            <button
-              onClick={handleSeedDemo}
-              disabled={seeding}
-              className="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold text-xs shadow-sm"
+            <Link
+              to="/wizard"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold text-xs shadow-sm transition-colors"
             >
-              {seeding ? 'Seeding Scenario...' : 'Load Demo Scenario'}
-            </button>
+              <PlusCircle className="w-4 h-4" />
+              <span>Start New Assessment</span>
+            </Link>
           </div>
         )}
 

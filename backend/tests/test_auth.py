@@ -80,3 +80,25 @@ def test_demo_user_seeded_and_can_login(client, db_session):
     assert data["user"]["email"] == "demo@proofpath.dev"
     assert "access_token" in data
 
+
+def test_user_role_assignment_and_update(client, auth_headers):
+    # Verify default role
+    me_res = client.get("/api/v1/auth/me", headers=auth_headers)
+    assert me_res.status_code == 200
+    assert me_res.json()["role"] == "student"
+
+    # Switch to recruiter
+    update_res = client.put("/api/v1/auth/role", headers=auth_headers, json={"role": "recruiter"})
+    assert update_res.status_code == 200
+    assert update_res.json()["role"] == "recruiter"
+
+    # Switch to college_tp
+    tp_res = client.put("/api/v1/auth/role", headers=auth_headers, json={"role": "college_tp"})
+    assert tp_res.status_code == 200
+    assert tp_res.json()["role"] == "college_tp"
+
+    # Invalid role fails with 400
+    invalid_res = client.put("/api/v1/auth/role", headers=auth_headers, json={"role": "superadmin_hacker"})
+    assert invalid_res.status_code == 400
+    assert "invalid role" in invalid_res.json()["detail"].lower()
+
