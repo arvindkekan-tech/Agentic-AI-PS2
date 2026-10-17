@@ -35,7 +35,7 @@ else:
     engine_kwargs["pool_recycle"] = 1800
 
     # If connecting to Supabase cloud instance without explicit sslmode, enforce require
-    if "supabase.co" in db_url and "sslmode" not in db_url:
+    if ("supabase.co" in db_url or "supabase.com" in db_url) and "sslmode" not in db_url:
         connect_args["sslmode"] = "require"
     
     if connect_args:

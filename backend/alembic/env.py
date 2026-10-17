@@ -41,7 +41,7 @@ def run_migrations_online() -> None:
     connectable_args = {}
     if db_url.startswith("sqlite"):
         connectable_args["check_same_thread"] = False
-    elif "supabase.co" in db_url and "sslmode" not in db_url:
+    elif ("supabase.co" in db_url or "supabase.com" in db_url) and "sslmode" not in db_url:
         connectable_args["sslmode"] = "require"
 
     connectable = create_engine(
