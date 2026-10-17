@@ -22,8 +22,26 @@ class Settings(BaseSettings):
     # Database (SQLite default for Phase 1 local persistence)
     DATABASE_URL: str = "sqlite:///./proofpath.db"
     
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def adjust_database_url_for_vercel(cls, v: str) -> str:
+        import os
+        if os.environ.get("VERCEL"):
+            if not v or "proofpath.db" in v:
+                return "sqlite:////tmp/proofpath.db"
+        return v
+    
     # Uploads
     UPLOAD_DIR: str = str(_backend_dir / "uploads")
+    
+    @field_validator("UPLOAD_DIR", mode="before")
+    @classmethod
+    def adjust_upload_dir_for_vercel(cls, v: str) -> str:
+        import os
+        if os.environ.get("VERCEL"):
+            return "/tmp/uploads"
+        return v
+    
     MAX_UPLOAD_SIZE_BYTES: int = 10 * 1024 * 1024  # 10 MB
     
     # AI Provider
