@@ -4,6 +4,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
 
+_backend_dir = Path(__file__).resolve().parent.parent.parent
+_project_root = _backend_dir.parent
+
+
 class Settings(BaseSettings):
     PROJECT_NAME: str = "ProofPath"
     VERSION: str = "1.0.0"
@@ -19,7 +23,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./proofpath.db"
     
     # Uploads
-    UPLOAD_DIR: str = str(Path(__file__).resolve().parent.parent.parent / "uploads")
+    UPLOAD_DIR: str = str(_backend_dir / "uploads")
     MAX_UPLOAD_SIZE_BYTES: int = 10 * 1024 * 1024  # 10 MB
     
     # AI Provider
@@ -28,6 +32,13 @@ class Settings(BaseSettings):
     
     # GitHub Integration
     GITHUB_TOKEN: str = ""
+
+    @field_validator("GITHUB_TOKEN", mode="before")
+    @classmethod
+    def clean_github_token(cls, v: str) -> str:
+        if isinstance(v, str):
+            return v.strip().strip("'\"")
+        return v
     
     # SSRF & Networking Limits
     SSRF_TIMEOUT_SECONDS: int = 10
@@ -42,7 +53,7 @@ class Settings(BaseSettings):
     ]
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(_backend_dir / ".env", _project_root / ".env", ".env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore"

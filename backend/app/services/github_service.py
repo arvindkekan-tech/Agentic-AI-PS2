@@ -103,7 +103,9 @@ def get_github_client() -> httpx.Client:
         "User-Agent": "ProofPath-CodeEvidence-Inspector/1.0"
     }
     if settings.GITHUB_TOKEN:
-        headers["Authorization"] = f"Bearer {settings.GITHUB_TOKEN}"
+        token = settings.GITHUB_TOKEN.strip().strip("'\"")
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
     return httpx.Client(base_url="https://api.github.com", headers=headers, timeout=15.0)
 
 
