@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  proofpath:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: proofpath-app
+    ports:
+      - "8010:8010"
+    environment:
+      - PORT=8010
+      - DATABASE_URL=sqlite:///./proofpath.db
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - WATCHER_ENABLED=true
+    volumes:
+      - ./proofpath.db:/app/proofpath.db
+      - ./uploads:/app/uploads
+    restart: unless-stopped
