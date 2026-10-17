@@ -44,6 +44,17 @@ app.add_middleware(
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
+@app.get("/health", summary="Direct health check")
+def health():
+    return {
+        "status": "healthy",
+        "service": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "database": "sqlite",
+        "ai_provider": "gemini" if settings.GEMINI_API_KEY else "deterministic"
+    }
+
+
 @app.get("/", summary="Root endpoint")
 def root():
     return {

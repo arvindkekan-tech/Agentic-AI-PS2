@@ -102,9 +102,11 @@ def get_github_client() -> httpx.Client:
         "Accept": "application/vnd.github.v3+json",
         "User-Agent": "ProofPath-CodeEvidence-Inspector/1.0"
     }
-    if settings.GITHUB_TOKEN:
-        headers["Authorization"] = f"Bearer {settings.GITHUB_TOKEN}"
+    tok = settings.GITHUB_TOKEN.strip() if settings.GITHUB_TOKEN else ""
+    if tok and not tok.startswith(("YOUR_", "REPLACE_")) and "YOUR_" not in tok and len(tok) >= 10:
+        headers["Authorization"] = f"Bearer {tok}"
     return httpx.Client(base_url="https://api.github.com", headers=headers, timeout=15.0)
+
 
 
 def fetch_repository_snapshot(repo_url: str, branch_name: Optional[str] = None) -> Dict[str, Any]:

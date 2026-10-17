@@ -89,11 +89,21 @@ def create_and_run_assessment(
             repository_snapshot=snapshot
         )
     except Exception as e:
-        # If provider fails, we raise an assessment error without corrupting or overwriting earlier assessments
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Assessment engine error: {str(e)}"
-        )
+        if provider_name == "gemini":
+            from app.ai.deterministic_provider import DeterministicProvider
+            fallback_provider = DeterministicProvider()
+            raw_findings = fallback_provider.assess_requirements(
+                requirements=raw_reqs,
+                resume_text=resume.extracted_text,
+                repository_snapshot=snapshot
+            )
+            provider_name = "deterministic"
+            model_name = "heuristic-v1 (fallback: Gemini quota/unavailable)"
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Assessment engine error: {str(e)}"
+            )
 
     # 4. Deterministic Citation Validation & Status Adjustment
     validated_findings = []

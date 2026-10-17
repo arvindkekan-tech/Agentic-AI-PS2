@@ -6,6 +6,19 @@ from app.models.assessment import Assessment
 from app.models.requirement import RequirementAssessment
 from app.models.citation import Citation
 from app.models.change_event import ChangeEvent
+from app.models.career import (
+    CareerProfile,
+    ProofTask,
+    JobApplication,
+    RoadmapMilestone,
+    InterviewSession,
+    SkillSprintQuestion,
+    SkillSprintAttempt,
+    SkillSprintAssignment,
+    CareerProofPassport,
+    RecruiterChallenge,
+    OpportunitySnapshot,
+)
 
 __all__ = [
     "User",
@@ -15,6 +28,16 @@ __all__ = [
     "Assessment",
     "RequirementAssessment",
     "Citation",
-    "ChangeEvent"
+    "ChangeEvent",
+    "CareerProfile",
+    "ProofTask",
+    "JobApplication",
+    "RoadmapMilestone",
+    "InterviewSession",
+    "SkillSprintQuestion",
+    "SkillSprintAttempt",
+    "SkillSprintAssignment",
+    "CareerProofPassport",
+    "RecruiterChallenge",
+    "OpportunitySnapshot",
 ]
-
